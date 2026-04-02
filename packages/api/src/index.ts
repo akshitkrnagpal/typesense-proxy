@@ -7,8 +7,9 @@ import { createSearchRoutes } from "./routes/search.js";
 import { createIngestRoutes } from "./routes/ingest.js";
 import { createHealthRoutes } from "./routes/health.js";
 import { createDocsRoutes } from "./routes/docs.js";
+import type { CollectionDefinition } from "./proxy-config.js";
 
-export function createApp(config?: Config) {
+export function createApp(config?: Config, collectionDefs?: Record<string, CollectionDefinition>) {
   const cfg = config ?? loadConfig();
   const app = new Hono();
 
@@ -21,7 +22,7 @@ export function createApp(config?: Config) {
 
   // Routes
   const { app: searchApp, cache: searchCache } = createSearchRoutes(cfg);
-  const { app: ingestApp, queue: ingestQueue } = createIngestRoutes(cfg);
+  const { app: ingestApp, queue: ingestQueue } = createIngestRoutes(cfg, collectionDefs);
   const healthApp = createHealthRoutes(cfg);
   const docsApp = createDocsRoutes();
 
@@ -42,6 +43,9 @@ export {
   getFacetFields,
   getSortableFields,
   toTypesenseSchema,
+  getComputedFields,
+  applyComputedFields,
+  applyComputedFieldsBatch,
   type ProxyConfig,
   type CollectionDefinition,
   type FieldConfig,

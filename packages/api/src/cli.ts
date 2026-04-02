@@ -121,7 +121,7 @@ async function main() {
     config.proxy.port = portOverride;
   }
 
-  const { app, config: finalConfig } = createApp(config);
+  const { app, config: finalConfig } = createApp(config, proxyConfig?.collections);
   const port = portOverride || finalConfig.proxy.port;
   const isDev = command === "dev";
 

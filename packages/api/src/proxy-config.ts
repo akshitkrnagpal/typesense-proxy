@@ -17,6 +17,26 @@ export interface FieldConfig {
   locale?: string;
   /** Enable infix search */
   infix?: boolean;
+  /**
+   * Compute this field's value from the document during ingestion.
+   * The function receives the full document and the locale (if available)
+   * and returns the field value.
+   * Computed fields are automatically added before sending to Typesense.
+   *
+   * Example:
+   * ```ts
+   * category_page_slug: {
+   *   type: "string",
+   *   facet: true,
+   *   compute: (doc, locale) => {
+   *     const color = String(doc.color || "").toLowerCase();
+   *     const category = String(doc.category || "").toLowerCase();
+   *     return `${color}-${category}`.replace(/\s+/g, '-');
+   *   },
+   * }
+   * ```
+   */
+  compute?: (doc: Record<string, unknown>, locale?: string) => unknown;
 }
 
 /**
@@ -192,4 +212,53 @@ export function toTypesenseSchema(name: string, def: CollectionDefinition) {
     ...(def.symbolsToIndex ? { symbols_to_index: def.symbolsToIndex } : {}),
     ...(def.enableNestedFields ? { enable_nested_fields: true } : {}),
   };
+}
+
+/**
+ * Get computed fields from a collection definition
+ */
+export function getComputedFields(def: CollectionDefinition): Array<{ name: string; compute: (doc: Record<string, unknown>, locale?: string) => unknown }> {
+  return Object.entries(def.fields)
+    .filter(([_, field]) => field.compute !== undefined)
+    .map(([name, field]) => ({ name, compute: field.compute! }));
+}
+
+/**
+ * Apply computed fields to a document.
+ * Runs all compute functions defined in the collection config
+ * and adds the resulting values to the document.
+ * The locale is passed to compute functions for localized field generation.
+ */
+export function applyComputedFields(
+  doc: Record<string, unknown>,
+  collectionDef: CollectionDefinition,
+  locale?: string
+): Record<string, unknown> {
+  const computedFields = getComputedFields(collectionDef);
+  if (computedFields.length === 0) return doc;
+
+  const result = { ...doc };
+  for (const { name, compute } of computedFields) {
+    try {
+      result[name] = compute(result, locale);
+    } catch (error) {
+      // Skip field if compute fails — don't break the whole ingest
+      console.warn(`Computed field '${name}' failed:`, error);
+    }
+  }
+  return result;
+}
+
+/**
+ * Apply computed fields to an array of documents.
+ */
+export function applyComputedFieldsBatch(
+  docs: Record<string, unknown>[],
+  collectionDef: CollectionDefinition,
+  locale?: string
+): Record<string, unknown>[] {
+  const computedFields = getComputedFields(collectionDef);
+  if (computedFields.length === 0) return docs;
+
+  return docs.map((doc) => applyComputedFields(doc, collectionDef, locale));
 }

@@ -4,8 +4,9 @@ import { resolveCollection } from "../config.js";
 import { IngestionQueue } from "../lib/queue.js";
 import { getTypesenseClient } from "../lib/typesense.js";
 import { authMiddleware } from "../middleware/auth.js";
+import { applyComputedFields, applyComputedFieldsBatch, type CollectionDefinition } from "../proxy-config.js";
 
-export function createIngestRoutes(config: Config) {
+export function createIngestRoutes(config: Config, collectionDefs?: Record<string, CollectionDefinition>) {
   const app = new Hono();
   const queue = new IngestionQueue({
     concurrency: config.queue.concurrency,
@@ -60,6 +61,22 @@ export function createIngestRoutes(config: Config) {
     return c.req.header("X-Locale") ?? c.req.query("locale") ?? undefined;
   }
 
+  function getCollectionDef(collectionName: string): CollectionDefinition | undefined {
+    return collectionDefs?.[collectionName];
+  }
+
+  function processDoc(doc: Record<string, unknown>, collectionName: string, locale?: string): Record<string, unknown> {
+    const def = getCollectionDef(collectionName);
+    if (!def) return doc;
+    return applyComputedFields(doc, def, locale);
+  }
+
+  function processDocs(docs: Record<string, unknown>[], collectionName: string, locale?: string): Record<string, unknown>[] {
+    const def = getCollectionDef(collectionName);
+    if (!def) return docs;
+    return applyComputedFieldsBatch(docs, def, locale);
+  }
+
   // Upsert single document
   app.post("/api/ingest/:collection/documents", async (c) => {
     const collectionName = c.req.param("collection");
@@ -69,12 +86,13 @@ export function createIngestRoutes(config: Config) {
     const locale = getLocale(c);
     const resolved = resolveCollection(config.collections, collectionName, locale);
     const body = await c.req.json();
+    const processed = processDoc(body as Record<string, unknown>, collectionName, locale);
 
     const result = await queue.enqueue(async () => {
       return typesense
         .collections(resolved)
         .documents()
-        .upsert(body as Record<string, unknown>);
+        .upsert(processed);
     });
 
     return c.json(result, 201);
@@ -94,11 +112,13 @@ export function createIngestRoutes(config: Config) {
       return c.json({ error: "Request body must be a JSON array" }, 400);
     }
 
+    const processed = processDocs(documents, collectionName, locale);
+
     const result = await queue.enqueue(async () => {
       return typesense
         .collections(resolved)
         .documents()
-        .import(documents, { action: "upsert" });
+        .import(processed, { action: "upsert" });
     });
 
     return c.json(result);
@@ -114,12 +134,13 @@ export function createIngestRoutes(config: Config) {
     const locale = getLocale(c);
     const resolved = resolveCollection(config.collections, collectionName, locale);
     const body = await c.req.json();
+    const processed = processDoc(body as Record<string, unknown>, collectionName, locale);
 
     const result = await queue.enqueue(async () => {
       return typesense
         .collections(resolved)
         .documents(docId)
-        .update(body as Record<string, unknown>);
+        .update(processed);
     });
 
     return c.json(result);

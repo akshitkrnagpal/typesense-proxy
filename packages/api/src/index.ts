@@ -1,0 +1,54 @@
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { logger } from "hono/logger";
+import { loadConfig, type Config } from "./config.js";
+import { errorHandler } from "./middleware/error-handler.js";
+import { createSearchRoutes } from "./routes/search.js";
+import { createIngestRoutes } from "./routes/ingest.js";
+import { createHealthRoutes } from "./routes/health.js";
+import { createDocsRoutes } from "./routes/docs.js";
+
+export function createApp(config?: Config) {
+  const cfg = config ?? loadConfig();
+  const app = new Hono();
+
+  // Global middleware
+  app.use("*", cors());
+  app.use("*", logger());
+
+  // Error handler
+  app.onError(errorHandler);
+
+  // Routes
+  const { app: searchApp, cache: searchCache } = createSearchRoutes(cfg);
+  const { app: ingestApp, queue: ingestQueue } = createIngestRoutes(cfg);
+  const healthApp = createHealthRoutes(cfg);
+  const docsApp = createDocsRoutes();
+
+  app.route("/", searchApp);
+  app.route("/", ingestApp);
+  app.route("/", healthApp);
+  app.route("/", docsApp);
+
+  return { app, config: cfg, searchCache, ingestQueue };
+}
+
+// Re-export values and types
+export { loadConfig, resolveCollection, type Config } from "./config.js";
+export { LRUCache, type CacheStats } from "./lib/cache.js";
+export { IngestionQueue, type QueueStats } from "./lib/queue.js";
+export {
+  transformAlgoliaRequestToTypesense,
+  transformTypesenseResponseToAlgolia,
+  transformMultiSearchResponse,
+  type AlgoliaSearchRequest,
+  type AlgoliaMultiSearchRequest,
+  type AlgoliaMultiSearchResponse,
+  type AlgoliaSearchResult,
+  type AlgoliaHit,
+  type AlgoliaHighlightResult,
+  type TypesenseSearchParams,
+  type TypesenseMultiSearchParams,
+  type TypesenseSearchResponse,
+  type TypesenseMultiSearchResponse,
+} from "./lib/transform.js";

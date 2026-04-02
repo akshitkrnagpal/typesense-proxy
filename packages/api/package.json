@@ -3,18 +3,21 @@
   "version": "0.1.0",
   "description": "HonoJS proxy server for Typesense with caching, rate limiting, and ingestion queue",
   "type": "module",
-  "main": "./dist/index.mjs",
+  "main": "./dist/index.js",
   "types": "./src/index.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
+      "import": "./dist/index.js",
       "types": "./src/index.ts"
     }
   },
+  "bin": {
+    "tsproxy": "./dist/cli.js"
+  },
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "build": "tsup src/index.ts src/server.ts --format esm --dts",
-    "start": "node dist/server.mjs",
+    "dev": "tsx watch src/cli.ts dev",
+    "build": "tsup src/index.ts src/server.ts src/cli.ts --format esm --dts",
+    "start": "node dist/cli.js start",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

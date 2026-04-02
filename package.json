@@ -6,9 +6,11 @@
     "build": "turbo build",
     "test": "turbo test",
     "typecheck": "turbo typecheck",
-    "lint": "turbo lint"
+    "lint": "turbo lint",
+    "seed": "tsx scripts/seed.ts"
   },
   "devDependencies": {
+    "tsx": "^4.19.0",
     "turbo": "^2.5.0",
     "typescript": "^5.5.3"
   },

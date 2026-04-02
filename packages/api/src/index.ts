@@ -35,6 +35,17 @@ export function createApp(config?: Config) {
 
 // Re-export values and types
 export { loadConfig, resolveCollection, type Config } from "./config.js";
+export {
+  defineConfig,
+  proxyConfigToConfig,
+  getSearchableFields,
+  getFacetFields,
+  getSortableFields,
+  toTypesenseSchema,
+  type ProxyConfig,
+  type CollectionDefinition,
+  type FieldConfig,
+} from "./proxy-config.js";
 export { LRUCache, type CacheStats } from "./lib/cache.js";
 export { IngestionQueue, type QueueStats } from "./lib/queue.js";
 export {

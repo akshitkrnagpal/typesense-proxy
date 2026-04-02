@@ -1,6 +1,6 @@
 import { useMemo, type ReactNode } from "react";
 import { InstantSearch } from "react-instantsearch";
-import { createSearchClient } from "../adapter/index.js";
+import { createSearchClient } from "@tsproxy/js";
 import { LocaleProvider, useLocale } from "../context/LocaleContext.js";
 
 interface SearchProviderProps {

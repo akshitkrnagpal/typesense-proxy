@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   InstantSearch,
   SearchBox,
@@ -8,63 +8,50 @@ import {
   Stats,
   Configure,
 } from "react-instantsearch";
+import { createSearchClient } from "@tsproxy/js";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
-function createSearchClient(url: string, locale?: string) {
-  const resultsCache = new Map<string, any>();
-
-  return {
-    search(requests: any[]) {
-      const key = JSON.stringify(requests);
-      if (resultsCache.has(key)) {
-        return Promise.resolve(resultsCache.get(key));
-      }
-
-      return fetch(`${url}/api/search`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(locale ? { "X-Locale": locale } : {}),
-        },
-        body: JSON.stringify({ requests }),
-      })
-        .then((res) => res.json())
-        .then((results) => {
-          resultsCache.set(key, results);
-          return results;
-        });
-    },
-    searchForFacetValues(requests: any[]) {
-      return this.search(requests);
-    },
-    clearCache() {
-      resultsCache.clear();
-    },
-  };
-}
-
-function Hit({ hit }: { hit: any }) {
+function Hit({ hit }: { hit: Record<string, unknown> }) {
   return (
     <article className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
       <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-        {hit.name || hit.title || hit.objectID}
+        {String(hit.name || hit.title || hit.objectID)}
       </h3>
       {hit.description && (
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          {hit.description}
+          {String(hit.description)}
         </p>
       )}
-      {hit.price !== undefined && (
-        <p className="mt-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">
-          ${hit.price}
-        </p>
-      )}
-      {hit.category && (
-        <span className="mt-2 inline-block rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-          {hit.category}
-        </span>
-      )}
+      <div className="mt-2 flex items-center gap-3">
+        {hit.price !== undefined && (
+          <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+            ${String(hit.price)}
+          </span>
+        )}
+        {hit.rating !== undefined && (
+          <span className="text-sm text-amber-600">
+            {"★".repeat(Math.round(Number(hit.rating)))} {String(hit.rating)}
+          </span>
+        )}
+      </div>
+      <div className="mt-2 flex gap-2">
+        {hit.category && (
+          <span className="inline-block rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+            {String(hit.category)}
+          </span>
+        )}
+        {hit.brand && (
+          <span className="inline-block rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+            {String(hit.brand)}
+          </span>
+        )}
+        {hit.in_stock === false && (
+          <span className="inline-block rounded-full bg-red-50 px-2 py-0.5 text-xs text-red-600 dark:bg-red-900/30 dark:text-red-400">
+            Out of stock
+          </span>
+        )}
+      </div>
     </article>
   );
 }
@@ -80,7 +67,7 @@ export default function SearchPage() {
   const indexName = process.env.NEXT_PUBLIC_INDEX_NAME || "products";
 
   const searchClient = useMemo(
-    () => createSearchClient(API_URL, locale),
+    () => createSearchClient({ url: API_URL, locale }),
     [locale]
   );
 
@@ -136,21 +123,43 @@ export default function SearchPage() {
 
           <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
             <aside className="md:col-span-1">
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                Category
-              </h2>
-              <RefinementList
-                attribute="category"
-                classNames={{
-                  root: "space-y-1",
-                  item: "flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300",
-                  selectedItem: "font-semibold text-zinc-900 dark:text-zinc-100",
-                  count:
-                    "rounded-full bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-500 dark:bg-zinc-800",
-                  checkbox: "rounded border-zinc-300 dark:border-zinc-600",
-                  label: "flex items-center gap-2 cursor-pointer",
-                }}
-              />
+              <div className="mb-6">
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                  Category
+                </h2>
+                <RefinementList
+                  attribute="category"
+                  classNames={{
+                    root: "space-y-1",
+                    item: "flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300",
+                    selectedItem:
+                      "font-semibold text-zinc-900 dark:text-zinc-100",
+                    count:
+                      "rounded-full bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-500 dark:bg-zinc-800",
+                    checkbox: "rounded border-zinc-300 dark:border-zinc-600",
+                    label: "flex items-center gap-2 cursor-pointer",
+                  }}
+                />
+              </div>
+
+              <div className="mb-6">
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                  Brand
+                </h2>
+                <RefinementList
+                  attribute="brand"
+                  classNames={{
+                    root: "space-y-1",
+                    item: "flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300",
+                    selectedItem:
+                      "font-semibold text-zinc-900 dark:text-zinc-100",
+                    count:
+                      "rounded-full bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-500 dark:bg-zinc-800",
+                    checkbox: "rounded border-zinc-300 dark:border-zinc-600",
+                    label: "flex items-center gap-2 cursor-pointer",
+                  }}
+                />
+              </div>
             </aside>
 
             <div className="md:col-span-3">
@@ -169,7 +178,6 @@ export default function SearchPage() {
                     item: "rounded px-3 py-1 text-sm text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800",
                     selectedItem:
                       "rounded bg-zinc-900 px-3 py-1 text-sm text-white dark:bg-zinc-100 dark:text-zinc-900",
-                    link: "",
                   }}
                 />
               </div>

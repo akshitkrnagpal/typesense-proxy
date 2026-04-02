@@ -1,5 +1,5 @@
-// Adapter
-export { createSearchClient } from "./adapter/index.js";
+// Re-export adapter from @tsproxy/js for convenience
+export { createSearchClient } from "@tsproxy/js";
 export type {
   SearchClient,
   SearchRequest,
@@ -7,7 +7,7 @@ export type {
   SearchResponseResult,
   Hit,
   FacetValue,
-} from "./adapter/index.js";
+} from "@tsproxy/js";
 
 // Context
 export { LocaleContext, LocaleProvider, useLocale } from "./context/LocaleContext.js";

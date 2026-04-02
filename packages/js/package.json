@@ -1,0 +1,22 @@
+{
+  "name": "@tsproxy/js",
+  "version": "0.1.0",
+  "description": "Framework-agnostic InstantSearch adapter for typesense-proxy",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "tsup": "^8.4.0",
+    "typescript": "^5.5.3"
+  }
+}

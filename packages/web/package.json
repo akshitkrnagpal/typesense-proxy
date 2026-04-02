@@ -1,26 +1,22 @@
 {
-  "name": "@tsproxy/web",
+  "name": "@tsproxy/react",
   "version": "0.1.0",
-  "description": "React components and InstantSearch adapter for typesense-proxy",
+  "description": "React components for typesense-proxy (wraps InstantSearch)",
   "type": "module",
-  "main": "./dist/index.mjs",
+  "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
+      "import": "./src/index.ts",
       "types": "./src/index.ts"
-    },
-    "./adapter": {
-      "import": "./dist/adapter.mjs",
-      "types": "./src/adapter/index.ts"
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts src/adapter/index.ts --format esm --dts --external react --external react-dom --external react-instantsearch",
-    "dev": "tsup src/index.ts src/adapter/index.ts --format esm --dts --watch --external react --external react-dom --external react-instantsearch",
+    "build": "tsup src/index.ts --format esm --dts --external react --external react-dom --external react-instantsearch --external @tsproxy/js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@tsproxy/js": "workspace:*",
     "react-instantsearch": "^7.13.0"
   },
   "peerDependencies": {
@@ -33,6 +29,6 @@
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "tsup": "^8.4.0",
-    "typescript": "^6.0.2"
+    "typescript": "^5.5.3"
   }
 }

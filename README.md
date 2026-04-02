@@ -68,11 +68,68 @@ pnpm install
 # Start Typesense
 docker compose up -d
 
-# Copy env
-cp .env.example .env
+# Seed sample data
+pnpm seed
 
 # Start dev servers
 pnpm dev
+```
+
+## Config-Driven Server
+
+The proxy server is configured via `tsproxy.config.ts`:
+
+```typescript
+import { defineConfig } from "@tsproxy/api";
+
+export default defineConfig({
+  typesense: {
+    host: "localhost",
+    port: 8108,
+    apiKey: "your-api-key",
+  },
+
+  server: {
+    port: 3000,
+    apiKey: "your-ingest-secret",
+  },
+
+  cache: { ttl: 60, maxSize: 1000 },
+  queue: { concurrency: 5, maxSize: 10000 },
+  rateLimit: { search: 100, ingest: 30 },
+
+  collections: {
+    products: {
+      fields: {
+        name: { type: "string", searchable: true },
+        price: { type: "float", sortable: true },
+        category: { type: "string", facet: true },
+        brand: { type: "string", facet: true },
+      },
+      locales: ["en", "fr", "de"],
+      defaultSortBy: "created_at",
+    },
+  },
+});
+```
+
+### CLI Commands
+
+```bash
+# Development mode
+tsproxy dev
+
+# Production mode
+tsproxy start
+
+# Validate config
+tsproxy validate
+
+# Custom config file
+tsproxy dev --config ./my-config.ts
+
+# Override port
+tsproxy dev --port 4000
 ```
 
 ### With Portless (recommended)

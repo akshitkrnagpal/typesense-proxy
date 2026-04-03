@@ -1,4 +1,4 @@
-FROM node:22-slim AS base
+FROM node:24-slim AS base
 RUN corepack enable && corepack prepare pnpm@10.12.1 --activate
 WORKDIR /app
 
@@ -20,7 +20,7 @@ COPY tsconfig.base.json ./
 RUN pnpm --filter @tsproxy/js build && pnpm --filter @tsproxy/api build
 
 # Production
-FROM node:22-slim AS runner
+FROM node:24-slim AS runner
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 

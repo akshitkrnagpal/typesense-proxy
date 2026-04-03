@@ -19,8 +19,8 @@ export function Stats({ overrides, formatText }: StatsProps) {
   const text = getOverride("span", overrides?.Text);
 
   const content = formatText
-    ? formatText(nbHits, processingTimeMS)
-    : `${nbHits.toLocaleString()} results found in ${processingTimeMS}ms`;
+    ? formatText(nbHits ?? 0, processingTimeMS ?? 0)
+    : `${(nbHits ?? 0).toLocaleString()} results found in ${processingTimeMS ?? 0}ms`;
 
   return (
     <root.Component {...root.resolveProps({})}>

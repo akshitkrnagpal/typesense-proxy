@@ -1,4 +1,4 @@
-# typesense-proxy
+# tsproxy
 
 A production-ready search proxy for Typesense with caching, rate limiting, ingestion queue, and InstantSearch-compatible React components.
 
@@ -59,8 +59,8 @@ Frontend (React + InstantSearch)
 
 ```bash
 # Clone
-git clone https://github.com/akshitkrnagpal/typesense-proxy.git
-cd typesense-proxy
+git clone https://github.com/akshitkrnagpal/tsproxy.git
+cd tsproxy
 
 # Install
 pnpm install

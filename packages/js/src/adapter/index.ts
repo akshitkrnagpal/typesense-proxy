@@ -11,7 +11,7 @@ interface CreateSearchClientOptions {
 
 /**
  * Creates an InstantSearch-compatible searchClient that proxies requests
- * through the typesense-proxy server.
+ * through the tsproxy server.
  *
  * Includes built-in request deduplication and result caching.
  */

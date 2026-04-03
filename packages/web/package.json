@@ -1,7 +1,7 @@
 {
   "name": "@tsproxy/react",
   "version": "0.1.0",
-  "description": "React components for typesense-proxy (wraps InstantSearch)",
+  "description": "React components for tsproxy (wraps InstantSearch)",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",

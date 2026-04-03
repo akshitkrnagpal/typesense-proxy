@@ -4,10 +4,10 @@ import { DocsThemeConfig } from "nextra-theme-docs";
 const config: DocsThemeConfig = {
   logo: <strong>tsproxy</strong>,
   project: {
-    link: "https://github.com/akshitkrnagpal/typesense-proxy",
+    link: "https://github.com/akshitkrnagpal/tsproxy",
   },
   docsRepositoryBase:
-    "https://github.com/akshitkrnagpal/typesense-proxy/tree/main/apps/docs/pages",
+    "https://github.com/akshitkrnagpal/tsproxy/tree/main/apps/docs/pages",
   footer: {
     text: `MIT ${new Date().getFullYear()} © tsproxy`,
   },

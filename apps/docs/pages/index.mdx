@@ -1,0 +1,57 @@
+# tsproxy
+
+A production-ready search proxy for [Typesense](https://typesense.org) with caching, rate limiting, an ingestion queue, and headless React components.
+
+## Why tsproxy?
+
+Typesense is a fast, typo-tolerant search engine. But exposing it directly to frontend clients creates challenges:
+
+- **API key exposure** — Typesense search-only keys still reveal your cluster details
+- **No caching layer** — every keystroke hits your search cluster
+- **No rate limiting** — bad actors can overwhelm your search backend
+- **No ingestion queue** — bulk writes can spike resource usage
+- **InstantSearch compatibility** — Typesense needs a translation layer for Algolia's InstantSearch widgets
+
+tsproxy solves all of these with a single proxy server.
+
+## Architecture
+
+```
+Frontend (React)          tsproxy API           Typesense
+┌─────────────────┐     ┌──────────────────┐    ┌──────────┐
+│ @tsproxy/react  │────▶│ HonoJS Proxy     │───▶│ Typesense│
+│ @tsproxy/js     │     │ - LRU Cache      │    │ Server   │
+│ InstantSearch   │◀────│ - Rate Limiting  │◀───│          │
+└─────────────────┘     │ - BullMQ Queue   │    └──────────┘
+                        │ - Algolia ↔ TS   │
+                        │   Transform      │
+                        └──────────────────┘
+```
+
+## Packages
+
+| Package | Description |
+|---------|-------------|
+| [`@tsproxy/api`](/packages/api) | HonoJS proxy server with search, ingest, caching, rate limiting |
+| [`@tsproxy/js`](/packages/js) | Algolia-compatible `searchClient` adapter for the proxy |
+| [`@tsproxy/react`](/packages/react) | Headless React components with BaseUI-style overrides |
+
+## Quick Start
+
+```bash
+# Clone and install
+git clone https://github.com/akshitkrnagpal/typesense-proxy.git
+cd typesense-proxy
+pnpm install
+
+# Start Typesense + Redis
+docker compose up -d
+
+# Seed sample data
+pnpm seed
+
+# Start the proxy and demo
+pnpm dev
+```
+
+Then open [http://localhost:3001/search](http://localhost:3001/search).

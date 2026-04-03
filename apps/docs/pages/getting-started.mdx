@@ -1,0 +1,111 @@
+# Getting Started
+
+## Prerequisites
+
+- [Node.js](https://nodejs.org/) v24+
+- [pnpm](https://pnpm.io/) v10+
+- [Docker](https://www.docker.com/) (for Typesense and Redis)
+
+## Installation
+
+```bash
+git clone https://github.com/akshitkrnagpal/typesense-proxy.git
+cd typesense-proxy
+pnpm install
+```
+
+## Start Infrastructure
+
+Start Typesense and Redis using Docker Compose:
+
+```bash
+docker compose up -d
+```
+
+This starts:
+- **Typesense** on port `8108` (search engine)
+- **Redis** on port `6379` (persistent queue backend)
+
+## Seed Sample Data
+
+```bash
+pnpm seed
+```
+
+This creates a `products` collection with 15 sample products including names, descriptions, prices, categories, brands, colors, and ratings.
+
+For locale-specific collections:
+
+```bash
+pnpm seed -- --locales
+```
+
+This creates `products_en`, `products_fr`, and `products_de` alongside the base collection.
+
+## Configuration
+
+Create a `tsproxy.config.ts` in your project root:
+
+```ts
+import { defineConfig } from "@tsproxy/api";
+
+export default defineConfig({
+  typesense: {
+    host: "localhost",
+    port: 8108,
+    protocol: "http",
+    apiKey: "your-api-key",
+  },
+  server: {
+    port: 3000,
+    apiKey: "your-ingest-secret",
+  },
+  cache: { ttl: 60, maxSize: 1000 },
+  queue: {
+    concurrency: 5,
+    maxSize: 10000,
+    redis: { host: "localhost", port: 6379 },
+  },
+  rateLimit: { search: 100, ingest: 30 },
+  collections: {
+    products: {
+      fields: {
+        name: { type: "string", searchable: true },
+        description: { type: "string", searchable: true, optional: true },
+        price: { type: "float", sortable: true },
+        category: { type: "string", facet: true },
+        brand: { type: "string", facet: true },
+      },
+    },
+  },
+});
+```
+
+## Start Development
+
+```bash
+pnpm dev
+```
+
+This starts:
+- **Proxy API** on `http://localhost:3000`
+- **Demo app** on `http://localhost:3001`
+- **Docs** on `http://localhost:3002` (if running)
+
+## Environment Variables
+
+You can also configure via environment variables instead of a config file:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `TYPESENSE_HOST` | `localhost` | Typesense host |
+| `TYPESENSE_PORT` | `8108` | Typesense port |
+| `TYPESENSE_API_KEY` | — | Typesense API key (required) |
+| `PROXY_PORT` | `3000` | Proxy server port |
+| `PROXY_API_KEY` | — | API key for ingest endpoints |
+| `REDIS_HOST` | — | Redis host (enables BullMQ queue) |
+| `REDIS_PORT` | `6379` | Redis port |
+| `CACHE_TTL` | `60` | Cache TTL in seconds |
+| `CACHE_MAX_SIZE` | `1000` | Max cached entries |
+| `RATE_LIMIT_SEARCH` | `100` | Search requests/min per IP |
+| `RATE_LIMIT_INGEST` | `30` | Ingest requests/min per IP |

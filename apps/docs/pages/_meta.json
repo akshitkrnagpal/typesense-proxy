@@ -1,0 +1,14 @@
+{
+  "index": "Introduction",
+  "getting-started": "Getting Started",
+  "guides": "Guides",
+  "packages": "Packages",
+  "api-reference": "API Reference",
+  "---": { "type": "separator" },
+  "github": {
+    "title": "GitHub ↗",
+    "type": "page",
+    "href": "https://github.com/akshitkrnagpal/typesense-proxy",
+    "newWindow": true
+  }
+}

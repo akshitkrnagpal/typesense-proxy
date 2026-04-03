@@ -1,0 +1,82 @@
+# Configuration Reference
+
+## tsproxy.config.ts
+
+```ts
+import { defineConfig } from "@tsproxy/api";
+
+export default defineConfig({
+  typesense: { ... },
+  server: { ... },
+  cache: { ... },
+  queue: { ... },
+  rateLimit: { ... },
+  collections: { ... },
+});
+```
+
+## `typesense`
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `host` | `string` | `"localhost"` | Typesense host |
+| `port` | `number` | `8108` | Typesense port |
+| `protocol` | `"http" \| "https"` | `"http"` | Connection protocol |
+| `apiKey` | `string` | — | Typesense API key |
+
+## `server`
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `port` | `number` | `3000` | Proxy server port |
+| `apiKey` | `string` | — | API key for ingest endpoints |
+
+## `cache`
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `ttl` | `number` | `60` | Cache TTL in seconds |
+| `maxSize` | `number` | `1000` | Maximum cached entries |
+
+## `queue`
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `concurrency` | `number` | `5` | Max concurrent Typesense writes |
+| `maxSize` | `number` | `10000` | Max queued tasks before rejecting |
+| `redis` | `{ host?, port? }` | — | Redis config (enables BullMQ) |
+
+## `rateLimit`
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `search` | `number` | `100` | Search requests/min per IP |
+| `ingest` | `number` | `30` | Ingest requests/min per IP |
+
+## `collections`
+
+```ts
+collections: {
+  [collectionName: string]: {
+    fields: Record<string, FieldConfig>;
+    locales?: string[];
+    defaultSortBy?: string;
+    tokenSeparators?: string[];
+    symbolsToIndex?: string[];
+    enableNestedFields?: boolean;
+  }
+}
+```
+
+### FieldConfig
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | `string` | Typesense field type (`"string"`, `"float"`, `"int64"`, `"bool"`, etc.) |
+| `searchable` | `boolean` | Include in `query_by` |
+| `facet` | `boolean` | Enable faceting |
+| `sortable` | `boolean` | Enable sorting |
+| `optional` | `boolean` | Allow null/missing values |
+| `locale` | `string` | Stemming locale |
+| `infix` | `boolean` | Enable infix search |
+| `compute` | `(doc, locale?) => value` | Computed field transform |

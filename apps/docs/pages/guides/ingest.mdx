@@ -1,0 +1,112 @@
+# Ingestion API
+
+All ingest endpoints require the `X-API-Key` header set to your `PROXY_API_KEY`.
+
+## Upsert a Document
+
+```bash
+curl -X POST http://localhost:3000/api/ingest/products/documents \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-secret-key" \
+  -d '{
+    "id": "100",
+    "name": "New Product",
+    "price": 49.99,
+    "category": "Electronics",
+    "brand": "TestBrand",
+    "in_stock": true,
+    "rating": 4.0,
+    "created_at": 1700000000
+  }'
+```
+
+## Bulk Import
+
+```bash
+curl -X POST http://localhost:3000/api/ingest/products/documents/import \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-secret-key" \
+  -d '[
+    { "id": "101", "name": "Product A", "price": 19.99, ... },
+    { "id": "102", "name": "Product B", "price": 29.99, ... }
+  ]'
+```
+
+## Update a Document
+
+```bash
+curl -X PATCH http://localhost:3000/api/ingest/products/documents/100 \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-secret-key" \
+  -d '{ "price": 39.99 }'
+```
+
+## Delete a Document
+
+```bash
+curl -X DELETE http://localhost:3000/api/ingest/products/documents/100 \
+  -H "X-API-Key: your-secret-key"
+```
+
+## Delete by Filter
+
+```bash
+curl -X DELETE "http://localhost:3000/api/ingest/products/documents?filter_by=in_stock:false" \
+  -H "X-API-Key: your-secret-key"
+```
+
+## Queue Status
+
+```bash
+curl http://localhost:3000/api/ingest/queue/status \
+  -H "X-API-Key: your-secret-key"
+```
+
+Response:
+
+```json
+{
+  "pending": 0,
+  "active": 0,
+  "completed": 42,
+  "failed": 0,
+  "maxSize": 10000,
+  "concurrency": 5,
+  "backend": "redis"
+}
+```
+
+## Computed Fields
+
+If your `tsproxy.config.ts` defines computed fields, they are automatically applied during ingestion:
+
+```ts
+collections: {
+  products: {
+    fields: {
+      color: { type: "string", facet: true },
+      category: { type: "string", facet: true },
+      category_page_slug: {
+        type: "string",
+        facet: true,
+        compute: (doc) => {
+          const color = String(doc.color || "").toLowerCase();
+          const category = String(doc.category || "").toLowerCase();
+          return `${color}-${category}`.replace(/\s+/g, "-");
+        },
+      },
+    },
+  },
+}
+```
+
+When you ingest `{ color: "Red", category: "Electronics" }`, the document is stored with `category_page_slug: "red-electronics"`.
+
+## Queue Backend
+
+The ingestion queue uses **BullMQ + Redis** when Redis is configured, with automatic fallback to an in-memory queue.
+
+Redis-backed queue benefits:
+- Jobs survive server restarts
+- Distributed processing across multiple proxy instances
+- Job retry and failure tracking

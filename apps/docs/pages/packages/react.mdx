@@ -1,0 +1,188 @@
+# @tsproxy/react
+
+Headless React components for search UI with a BaseUI-inspired overrides pattern. Ships unstyled — you control all rendering.
+
+## Install
+
+```bash
+npm install @tsproxy/react @tsproxy/js react-instantsearch
+```
+
+## Components
+
+### SearchBox
+
+Sub-elements: `Root`, `Form`, `Input`, `SubmitButton`, `ResetButton`
+
+```tsx
+<SearchBox
+  placeholder="Search..."
+  queryHook={debouncedSearch}  // optional: debounce/transform queries
+  overrides={{
+    Input: { props: { className: "search-input" } },
+    SubmitButton: { props: { hidden: true } },
+  }}
+/>
+```
+
+### Hits
+
+Sub-elements: `Root`, `List`, `Item`
+
+```tsx
+<Hits
+  hitComponent={({ hit }) => <ProductCard product={hit} />}
+  overrides={{
+    List: { props: { className: "grid grid-cols-4 gap-4" } },
+  }}
+/>
+```
+
+### RefinementList
+
+Sub-elements: `Root`, `List`, `Item`, `Label`, `Checkbox`, `LabelText`, `Count`
+
+```tsx
+<RefinementList
+  attribute="category"
+  overrides={{
+    Checkbox: { props: { className: "custom-checkbox" } },
+    Count: { props: { className: "text-gray-400 text-xs" } },
+  }}
+/>
+```
+
+### Pagination
+
+Sub-elements: `Root`, `List`, `Item`, `Link`
+
+```tsx
+<Pagination
+  padding={3}
+  overrides={{
+    Link: { props: { className: "px-3 py-1 rounded hover:bg-gray-100" } },
+  }}
+/>
+```
+
+### Stats
+
+Sub-elements: `Root`, `Text`
+
+```tsx
+<Stats
+  formatText={(nbHits, ms) => `${nbHits} products (${ms}ms)`}
+  overrides={{
+    Root: { props: { className: "text-sm text-gray-500" } },
+  }}
+/>
+```
+
+### SortBy
+
+Sub-elements: `Root`, `Select`, `Option`
+
+```tsx
+<SortBy
+  items={[
+    { value: "products", label: "Relevance" },
+    { value: "products/sort/price:asc", label: "Price: Low to High" },
+  ]}
+/>
+```
+
+### NoResults
+
+Sub-elements: `Root`, `Title`, `Message`
+
+```tsx
+<NoResults
+  title="Nothing found"
+  message="Try different search terms."
+/>
+```
+
+### HitsSkeleton
+
+Sub-elements: `Root`, `List`, `Item`
+
+```tsx
+<HitsSkeleton
+  count={8}
+  overrides={{
+    List: { props: { className: "grid grid-cols-4 gap-4" } },
+  }}
+/>
+```
+
+### LocaleSelector
+
+Sub-elements: `Root`, `Select`, `Option`
+
+```tsx
+<LocaleSelector
+  locales={[
+    { code: "en", label: "English" },
+    { code: "fr", label: "French" },
+  ]}
+/>
+```
+
+## Overrides System
+
+Every component accepts an `overrides` prop. Each sub-element can be:
+
+**Extended with props:**
+```tsx
+overrides={{
+  Input: { props: { className: "my-class", "aria-label": "Search" } },
+}}
+```
+
+**Extended with a function (receives default props):**
+```tsx
+overrides={{
+  Item: {
+    props: (defaultProps) => ({
+      ...defaultProps,
+      className: `${defaultProps.className} extra-class`,
+    }),
+  },
+}}
+```
+
+**Replaced entirely:**
+```tsx
+overrides={{
+  Checkbox: {
+    component: ({ checked, onChange }) => (
+      <Switch checked={checked} onChange={onChange} />
+    ),
+  },
+}}
+```
+
+## Types
+
+```ts
+import type {
+  Override,
+  Overrides,
+  SearchBoxProps,
+  SearchBoxElements,
+  HitsProps,
+  HitsElements,
+  RefinementListProps,
+  RefinementListElements,
+  PaginationProps,
+  PaginationElements,
+  StatsProps,
+  StatsElements,
+  SortByProps,
+  SortByElements,
+  NoResultsProps,
+  NoResultsElements,
+  HitsSkeletonProps,
+  HitsSkeletonElements,
+} from "@tsproxy/react";
+```

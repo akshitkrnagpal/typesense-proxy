@@ -1,0 +1,69 @@
+# @tsproxy/js
+
+Algolia-compatible `searchClient` adapter for the tsproxy API. Works with `react-instantsearch`, `vue-instantsearch`, or standalone.
+
+## Install
+
+```bash
+npm install @tsproxy/js
+```
+
+## Usage
+
+```ts
+import { createSearchClient } from "@tsproxy/js";
+
+const searchClient = createSearchClient({
+  url: "http://localhost:3000",
+  locale: "en",      // optional: sends X-Locale header
+  cache: true,       // optional: client-side result caching (default: true)
+});
+```
+
+## With react-instantsearch
+
+```tsx
+import { InstantSearch } from "react-instantsearch";
+import { createSearchClient } from "@tsproxy/js";
+
+const searchClient = createSearchClient({ url: "http://localhost:3000" });
+
+<InstantSearch searchClient={searchClient} indexName="products">
+  {/* widgets */}
+</InstantSearch>
+```
+
+## Features
+
+- **Request deduplication** — identical concurrent requests are coalesced
+- **Result caching** — configurable client-side cache
+- **Locale support** — automatic `X-Locale` header
+- **Algolia-compatible** — implements the `search()` and `searchForFacetValues()` interface
+
+## API
+
+### `createSearchClient(options)`
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `url` | `string` | — | Proxy server URL (required) |
+| `locale` | `string` | — | Locale for multilingual search |
+| `cache` | `boolean` | `true` | Enable client-side result caching |
+
+Returns a `SearchClient` with:
+- `search(requests)` — execute a multi-search
+- `searchForFacetValues(requests)` — search facet values
+- `clearCache()` — clear the result cache
+
+## Types
+
+```ts
+import type {
+  SearchClient,
+  SearchRequest,
+  SearchResponse,
+  SearchResponseResult,
+  Hit,
+  FacetValue,
+} from "@tsproxy/js";
+```

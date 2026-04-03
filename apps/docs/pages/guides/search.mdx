@@ -1,0 +1,124 @@
+# Search Integration
+
+## Using with React + InstantSearch
+
+The recommended way to add search to your React app is using `@tsproxy/react` components with `react-instantsearch`.
+
+### Install
+
+```bash
+npm install @tsproxy/js @tsproxy/react react-instantsearch
+```
+
+### Basic Setup
+
+```tsx
+import { useMemo } from "react";
+import { InstantSearch, Configure } from "react-instantsearch";
+import { createSearchClient } from "@tsproxy/js";
+import { SearchBox, Hits, RefinementList, Pagination, Stats } from "@tsproxy/react";
+
+export default function SearchPage() {
+  const searchClient = useMemo(
+    () => createSearchClient({ url: "http://localhost:3000" }),
+    [],
+  );
+
+  return (
+    <InstantSearch searchClient={searchClient} indexName="products">
+      <Configure hitsPerPage={12} />
+      <SearchBox placeholder="Search..." />
+      <Stats />
+      <RefinementList attribute="category" />
+      <Hits hitComponent={({ hit }) => <div>{hit.name}</div>} />
+      <Pagination />
+    </InstantSearch>
+  );
+}
+```
+
+### Overrides Pattern
+
+Every `@tsproxy/react` component accepts an `overrides` prop to customize or replace any sub-element:
+
+```tsx
+<SearchBox
+  overrides={{
+    Input: {
+      props: { className: "rounded-full border px-4 py-2" },
+    },
+    SubmitButton: { props: { hidden: true } },
+    ResetButton: {
+      component: ({ onClick, hidden }) => (
+        <button onClick={onClick} hidden={hidden}>Clear</button>
+      ),
+    },
+  }}
+/>
+```
+
+Each override accepts:
+- **`props`** — merge additional props (object or function `(defaultProps) => overrideProps`)
+- **`component`** — replace the sub-element entirely with a custom component
+
+### Debounced Search
+
+Use `queryHook` to debounce search requests:
+
+```tsx
+import { useRef, useCallback } from "react";
+
+function useDebouncedSearch(delay = 300) {
+  const timerRef = useRef(undefined);
+  return useCallback(
+    (query, search) => {
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => search(query), delay);
+    },
+    [delay],
+  );
+}
+
+// In your component:
+const debouncedSearch = useDebouncedSearch(300);
+<SearchBox queryHook={debouncedSearch} />
+```
+
+## Using with Vanilla JS
+
+If you're not using React, you can use `@tsproxy/js` directly:
+
+```ts
+import { createSearchClient } from "@tsproxy/js";
+
+const client = createSearchClient({ url: "http://localhost:3000" });
+
+const results = await client.search([
+  {
+    indexName: "products",
+    params: { query: "keyboard", hitsPerPage: 10, page: 0 },
+  },
+]);
+
+console.log(results.results[0].hits);
+```
+
+## Direct API Calls
+
+You can also call the proxy API directly:
+
+```bash
+curl -X POST http://localhost:3000/api/search \
+  -H "Content-Type: application/json" \
+  -d '{
+    "requests": [{
+      "indexName": "products",
+      "params": {
+        "query": "keyboard",
+        "hitsPerPage": 12,
+        "page": 0,
+        "facets": ["category", "brand"]
+      }
+    }]
+  }'
+```

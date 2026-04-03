@@ -1,0 +1,74 @@
+# Ingest API
+
+All ingest endpoints require the `X-API-Key` header.
+
+## POST /api/ingest/:collection/documents
+
+Upsert a single document.
+
+**Request:** JSON document body.
+
+**Response:** `201` with the upserted document.
+
+## POST /api/ingest/:collection/documents/import
+
+Bulk import documents.
+
+**Request:** JSON array of documents.
+
+**Response:** `200` with import results (per-document success/failure).
+
+## PATCH /api/ingest/:collection/documents/:id
+
+Partial update a document.
+
+**Request:** JSON with fields to update.
+
+**Response:** `200` with the updated document.
+
+## DELETE /api/ingest/:collection/documents/:id
+
+Delete a single document by ID.
+
+**Response:** `200` with the deleted document.
+
+## DELETE /api/ingest/:collection/documents?filter_by=
+
+Delete documents matching a filter.
+
+**Query params:**
+- `filter_by` (required) — Typesense filter expression
+
+**Response:** `200` with deletion count.
+
+## GET /api/ingest/queue/status
+
+Get ingestion queue statistics.
+
+**Response:**
+
+```json
+{
+  "pending": 0,
+  "active": 0,
+  "completed": 42,
+  "failed": 0,
+  "maxSize": 10000,
+  "concurrency": 5,
+  "backend": "redis"
+}
+```
+
+## Authentication
+
+All ingest endpoints require `X-API-Key` header matching `PROXY_API_KEY`:
+
+```bash
+curl -H "X-API-Key: your-secret" http://localhost:3000/api/ingest/...
+```
+
+Missing or invalid key returns `401`.
+
+## Rate Limiting
+
+Limited to `RATE_LIMIT_INGEST` requests per minute per IP (default: 30).

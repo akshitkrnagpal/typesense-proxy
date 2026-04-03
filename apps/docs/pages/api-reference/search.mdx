@@ -1,0 +1,94 @@
+# Search API
+
+## POST /api/search
+
+Execute a multi-search query. Accepts the Algolia InstantSearch multi-search format.
+
+### Request
+
+```json
+{
+  "requests": [
+    {
+      "indexName": "products",
+      "params": {
+        "query": "keyboard",
+        "hitsPerPage": 12,
+        "page": 0,
+        "facets": ["category", "brand"],
+        "maxValuesPerFacet": 10,
+        "facetFilters": [["category:Electronics"]],
+        "highlightPreTag": "__ais-highlight__",
+        "highlightPostTag": "__/ais-highlight__"
+      }
+    }
+  ]
+}
+```
+
+The `params` field accepts either an object (InstantSearch v7+) or a URL-encoded string (legacy).
+
+### Headers
+
+| Header | Required | Description |
+|--------|----------|-------------|
+| `Content-Type` | Yes | `application/json` |
+| `X-Locale` | No | Locale for multilingual collection resolution |
+
+### Response
+
+```json
+{
+  "results": [
+    {
+      "hits": [
+        {
+          "objectID": "5",
+          "name": "Mechanical Keyboard",
+          "description": "RGB mechanical keyboard with Cherry MX switches",
+          "price": 149.99,
+          "category": "Electronics",
+          "brand": "KeyCraft",
+          "_highlightResult": {
+            "name": {
+              "value": "Mechanical <mark>Keyboard</mark>",
+              "matchLevel": "full",
+              "matchedWords": ["Keyboard"]
+            }
+          }
+        }
+      ],
+      "nbHits": 1,
+      "page": 0,
+      "nbPages": 1,
+      "hitsPerPage": 12,
+      "processingTimeMS": 1,
+      "query": "keyboard",
+      "facets": {
+        "category": { "Electronics": 1 },
+        "brand": { "KeyCraft": 1 }
+      },
+      "exhaustiveNbHits": true
+    }
+  ]
+}
+```
+
+### Error Response
+
+When Typesense returns errors, the response includes an `_errors` array:
+
+```json
+{
+  "results": [{ "hits": [], "nbHits": 0, ... }],
+  "_errors": ["Collection `products` not found."]
+}
+```
+
+### Caching
+
+Responses are cached in an LRU cache keyed by `(requests, locale)`. Error responses are never cached.
+
+### Rate Limiting
+
+Limited to `RATE_LIMIT_SEARCH` requests per minute per IP (default: 100).

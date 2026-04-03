@@ -1,0 +1,71 @@
+# Multilingual Search
+
+tsproxy supports locale-aware search through per-locale Typesense collections and computed fields.
+
+## How It Works
+
+When you define locales in your config, tsproxy automatically maps collection names to locale-specific variants:
+
+```ts
+// tsproxy.config.ts
+collections: {
+  products: {
+    fields: { /* ... */ },
+    locales: ["en", "fr", "de"],
+  },
+}
+```
+
+This creates the mapping:
+- `products` + locale `en` → `products_en`
+- `products` + locale `fr` → `products_fr`
+- `products` + locale `de` → `products_de`
+
+## Sending the Locale
+
+The proxy reads the locale from the `X-Locale` header or `?locale=` query parameter:
+
+```bash
+curl -X POST http://localhost:3000/api/search \
+  -H "Content-Type: application/json" \
+  -H "X-Locale: fr" \
+  -d '{"requests":[{"indexName":"products","params":{"query":"chaise"}}]}'
+```
+
+This searches the `products_fr` collection.
+
+## Using with @tsproxy/js
+
+```ts
+const client = createSearchClient({
+  url: "http://localhost:3000",
+  locale: "fr",
+});
+```
+
+The adapter automatically sends the `X-Locale` header with every request.
+
+## Seeding Locale Collections
+
+```bash
+pnpm seed -- --locales
+```
+
+This creates `products_en`, `products_fr`, and `products_de` with the same sample data.
+
+## Computed Fields with Locale
+
+Computed fields receive the locale, enabling locale-aware transformations:
+
+```ts
+category_page_slug: {
+  type: "string",
+  facet: true,
+  compute: (doc, locale) => {
+    const color = String(doc.color || "").toLowerCase();
+    const category = String(doc.category || "").toLowerCase();
+    // Could use locale for translations
+    return `${color}-${category}`.replace(/\s+/g, "-");
+  },
+}
+```

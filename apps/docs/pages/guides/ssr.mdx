@@ -1,0 +1,102 @@
+# Server-Side Rendering
+
+tsproxy supports full SSR with Next.js using `react-instantsearch`'s `getServerState` and `InstantSearchSSRProvider`.
+
+## How It Works
+
+1. `getServerSideProps` calls `getServerState()` which renders the search UI on the server
+2. The proxy API executes the search and returns results
+3. The HTML includes the rendered product grid — no JavaScript needed for first paint
+4. `InstantSearchSSRProvider` hydrates the client with the server state
+
+## Next.js Pages Router
+
+```tsx
+import { InstantSearch, InstantSearchSSRProvider, getServerState } from "react-instantsearch";
+import { renderToString } from "react-dom/server";
+import { createSearchClient } from "@tsproxy/js";
+import type { GetServerSideProps } from "next";
+
+const API_URL = "http://localhost:3000";
+
+function SearchApp() {
+  const searchClient = useMemo(
+    () => createSearchClient({ url: API_URL }),
+    [],
+  );
+
+  return (
+    <InstantSearch searchClient={searchClient} indexName="products">
+      {/* Your search components */}
+    </InstantSearch>
+  );
+}
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  const serverState = await getServerState(<SearchApp />, { renderToString });
+
+  return {
+    props: {
+      serverState: JSON.parse(JSON.stringify(serverState)),
+    },
+  };
+};
+
+export default function SearchPage({ serverState }) {
+  return (
+    <InstantSearchSSRProvider {...serverState}>
+      <SearchApp />
+    </InstantSearchSSRProvider>
+  );
+}
+```
+
+## URL Sync
+
+Combine SSR with URL routing so search state is shareable and bookmarkable:
+
+```tsx
+import { history } from "instantsearch.js/es/lib/routers";
+
+function createRouting() {
+  return {
+    router: history({
+      cleanUrlOnDispose: false,
+      getLocation: () =>
+        typeof window !== "undefined"
+          ? window.location
+          : new URL("http://localhost/search"),
+    }),
+    stateMapping: {
+      stateToRoute(uiState) {
+        const state = uiState["products"] || {};
+        return {
+          q: state.query || undefined,
+          page: state.page > 1 ? state.page : undefined,
+        };
+      },
+      routeToState(routeState) {
+        return {
+          products: {
+            query: routeState.q || "",
+            page: routeState.page ? Number(routeState.page) : undefined,
+          },
+        };
+      },
+    },
+  };
+}
+
+// Use in InstantSearch:
+<InstantSearch routing={createRouting()} ... />
+```
+
+URLs like `/search?q=keyboard&page=2` are fully SSR'd — the server renders the results matching that query.
+
+## Verifying SSR
+
+```bash
+curl http://localhost:3001/search?q=keyboard
+```
+
+The HTML response will contain the actual product data (e.g., "Mechanical Keyboard") without requiring JavaScript.

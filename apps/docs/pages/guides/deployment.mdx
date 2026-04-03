@@ -1,0 +1,85 @@
+# Production Deployment
+
+## Docker Compose (Recommended)
+
+The project includes a production-ready Docker Compose configuration:
+
+```bash
+docker compose -f docker-compose.prod.yml up -d
+```
+
+This starts three services:
+- **Typesense** — search engine with persistent data volume
+- **Redis** — persistent queue backend with AOF
+- **Proxy** — the tsproxy API server
+
+### Environment Variables
+
+Create a `.env` file:
+
+```env
+TYPESENSE_API_KEY=your-production-api-key
+PROXY_API_KEY=your-ingest-secret
+PROXY_PORT=3000
+CACHE_TTL=60
+CACHE_MAX_SIZE=1000
+QUEUE_CONCURRENCY=5
+QUEUE_MAX_SIZE=10000
+```
+
+### Health Checks
+
+All services include health checks. The proxy won't start until Typesense and Redis are healthy:
+
+```bash
+curl http://localhost:3000/api/health
+```
+
+```json
+{
+  "status": "healthy",
+  "timestamp": "2026-04-03T12:00:00.000Z",
+  "proxy": { "status": "ok" },
+  "typesense": { "status": "ok", "host": "http://typesense:8108" },
+  "redis": { "status": "ok", "host": "redis:6379" }
+}
+```
+
+## Building the Docker Image
+
+```bash
+docker build -t tsproxy .
+```
+
+The multi-stage Dockerfile:
+1. Installs dependencies (pnpm)
+2. Builds `@tsproxy/js` and `@tsproxy/api`
+3. Produces a minimal Node.js 24 runtime image
+
+## Standalone Deployment
+
+If you prefer running without Docker:
+
+```bash
+# Build
+pnpm --filter @tsproxy/api build
+
+# Start
+TYPESENSE_API_KEY=your-key \
+TYPESENSE_HOST=your-typesense-host \
+REDIS_HOST=your-redis-host \
+node packages/api/dist/server.js
+```
+
+Or use the CLI:
+
+```bash
+pnpm --filter @tsproxy/api start
+```
+
+## Scaling
+
+- The proxy is stateless (cache is in-memory per instance, queue is in Redis)
+- Run multiple proxy instances behind a load balancer
+- All instances share the same Redis queue for ingestion
+- Each instance has its own LRU search cache

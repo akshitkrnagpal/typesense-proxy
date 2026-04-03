@@ -1,0 +1,88 @@
+# @tsproxy/api
+
+HonoJS proxy server for Typesense with caching, rate limiting, and an ingestion queue.
+
+## Features
+
+- **Search proxy** — Algolia-compatible multi-search endpoint
+- **LRU cache** — configurable TTL and max size, error-aware (never caches failures)
+- **Rate limiting** — per-IP, configurable per endpoint
+- **Ingestion queue** — BullMQ (Redis) with in-memory fallback
+- **Computed fields** — transform documents during ingestion
+- **Config file** — `tsproxy.config.ts` with `defineConfig` helper
+- **CLI** — `tsproxy dev` and `tsproxy start` commands
+
+## Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/api/search` | No | Multi-search (Algolia format) |
+| `GET` | `/api/health` | No | Health check (Typesense + Redis) |
+| `GET` | `/api/docs` | No | OpenAPI documentation |
+| `POST` | `/api/ingest/:collection/documents` | Yes | Upsert document |
+| `POST` | `/api/ingest/:collection/documents/import` | Yes | Bulk import |
+| `PATCH` | `/api/ingest/:collection/documents/:id` | Yes | Partial update |
+| `DELETE` | `/api/ingest/:collection/documents/:id` | Yes | Delete document |
+| `DELETE` | `/api/ingest/:collection/documents` | Yes | Delete by filter |
+| `GET` | `/api/ingest/queue/status` | Yes | Queue stats |
+
+## Config File
+
+```ts
+import { defineConfig } from "@tsproxy/api";
+
+export default defineConfig({
+  typesense: {
+    host: "localhost",
+    port: 8108,
+    apiKey: "your-key",
+  },
+  server: { port: 3000, apiKey: "ingest-secret" },
+  cache: { ttl: 60, maxSize: 1000 },
+  queue: {
+    concurrency: 5,
+    maxSize: 10000,
+    redis: { host: "localhost", port: 6379 },
+  },
+  rateLimit: { search: 100, ingest: 30 },
+  collections: {
+    products: {
+      fields: {
+        name: { type: "string", searchable: true },
+        price: { type: "float", sortable: true },
+        category: { type: "string", facet: true },
+      },
+      locales: ["en", "fr"],
+      defaultSortBy: "created_at",
+    },
+  },
+});
+```
+
+## Field Types
+
+| Type | Description |
+|------|-------------|
+| `searchable` | Included in `query_by` for search |
+| `facet` | Available for faceted filtering |
+| `sortable` | Available for sort ordering |
+| `optional` | Allow null/missing values |
+| `compute` | Transform function `(doc, locale?) => value` |
+
+## Exports
+
+```ts
+import {
+  createApp,
+  loadConfig,
+  defineConfig,
+  resolveCollection,
+  getSearchableFields,
+  getFacetFields,
+  getSortableFields,
+  LRUCache,
+  IngestionQueue,
+  transformAlgoliaRequestToTypesense,
+  transformMultiSearchResponse,
+} from "@tsproxy/api";
+```

@@ -1,0 +1,54 @@
+# Health API
+
+## GET /api/health
+
+Returns the health status of the proxy and its dependencies.
+
+### Response (healthy)
+
+```json
+{
+  "status": "healthy",
+  "timestamp": "2026-04-03T12:00:00.000Z",
+  "proxy": { "status": "ok" },
+  "typesense": {
+    "status": "ok",
+    "host": "http://localhost:8108"
+  },
+  "redis": {
+    "status": "ok",
+    "host": "localhost:6379"
+  }
+}
+```
+
+### Response (degraded)
+
+HTTP `503`:
+
+```json
+{
+  "status": "degraded",
+  "timestamp": "2026-04-03T12:00:00.000Z",
+  "proxy": { "status": "ok" },
+  "typesense": {
+    "status": "error",
+    "host": "http://localhost:8108",
+    "error": "ECONNREFUSED"
+  },
+  "redis": {
+    "status": "ok",
+    "host": "localhost:6379"
+  }
+}
+```
+
+### Redis Not Configured
+
+When Redis is not configured, the `redis.status` field shows `"not_configured"`:
+
+```json
+{
+  "redis": { "status": "not_configured" }
+}
+```

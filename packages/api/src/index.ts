@@ -21,7 +21,7 @@ export function createApp(config?: Config, collectionDefs?: Record<string, Colle
   app.onError(errorHandler);
 
   // Routes
-  const { app: searchApp, cache: searchCache } = createSearchRoutes(cfg);
+  const { app: searchApp, cache: searchCache } = createSearchRoutes(cfg, collectionDefs);
   const { app: ingestApp, queue: ingestQueue } = createIngestRoutes(cfg, collectionDefs);
   const healthApp = createHealthRoutes(cfg);
   const docsApp = createDocsRoutes();

@@ -6,7 +6,7 @@
 
 export interface AlgoliaSearchRequest {
   indexName: string;
-  params: string;
+  params: string | Record<string, unknown>;
 }
 
 export interface AlgoliaMultiSearchRequest {
@@ -107,15 +107,25 @@ export interface TypesenseMultiSearchResponse {
 
 // ---- Algolia -> Typesense request transform ----
 
-function parseAlgoliaParams(paramsString: string): Record<string, string> {
-  const params: Record<string, string> = {};
-  if (!paramsString) return params;
+function parseAlgoliaParams(params: string | Record<string, unknown>): Record<string, string> {
+  if (!params) return {};
 
-  const searchParams = new URLSearchParams(paramsString);
-  for (const [key, value] of searchParams.entries()) {
-    params[key] = value;
+  // InstantSearch v7+ sends params as an object; older versions send a URL-encoded string
+  if (typeof params === "object") {
+    const result: Record<string, string> = {};
+    for (const [key, value] of Object.entries(params)) {
+      if (value === undefined || value === null) continue;
+      result[key] = typeof value === "string" ? value : JSON.stringify(value);
+    }
+    return result;
   }
-  return params;
+
+  const result: Record<string, string> = {};
+  const searchParams = new URLSearchParams(params);
+  for (const [key, value] of searchParams.entries()) {
+    result[key] = value;
+  }
+  return result;
 }
 
 function transformAlgoliaFilters(facetFilters?: string, numericFilters?: string, filters?: string): string | undefined {
@@ -359,6 +369,11 @@ export function transformTypesenseResponseToAlgolia(
   const nbHits = tsResponse.found;
   const nbPages = Math.ceil(nbHits / hitsPerPage);
 
+  // Serialize params back to a string if it was an object
+  const paramsString = typeof originalRequest.params === "string"
+    ? originalRequest.params
+    : new URLSearchParams(Object.entries(params)).toString();
+
   return {
     hits,
     nbHits,
@@ -367,7 +382,7 @@ export function transformTypesenseResponseToAlgolia(
     hitsPerPage,
     processingTimeMS: tsResponse.search_time_ms,
     query,
-    params: originalRequest.params,
+    params: paramsString,
     facets,
     facets_stats,
     exhaustiveNbHits: true,

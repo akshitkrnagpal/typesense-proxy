@@ -70,30 +70,43 @@ for (let i = 1; i < args.length; i++) {
 }
 
 async function loadProxyConfig(): Promise<ProxyConfig | null> {
-  const searchPaths = configPath
-    ? [resolve(configPath)]
-    : [
-        resolve(process.cwd(), "tsproxy.config.ts"),
-        resolve(process.cwd(), "tsproxy.config.js"),
-        resolve(process.cwd(), "tsproxy.config.mjs"),
-      ];
-
-  for (const filePath of searchPaths) {
+  if (configPath) {
+    const filePath = resolve(configPath);
     if (existsSync(filePath)) {
-      try {
-        const fileUrl = pathToFileURL(filePath).href;
-        const mod = await import(`${fileUrl}?t=${Date.now()}`);
-        const config = mod.default || mod;
-        console.log(`Loaded config from ${filePath}`);
-        return config as ProxyConfig;
-      } catch (error) {
-        console.error(`Error loading config from ${filePath}:`, error);
-        process.exit(1);
+      return importConfig(filePath);
+    }
+    return null;
+  }
+
+  // Search current directory and parent directories for config file
+  const configNames = ["tsproxy.config.ts", "tsproxy.config.js", "tsproxy.config.mjs"];
+  let dir = resolve(process.cwd());
+  const root = resolve("/");
+
+  while (dir !== root) {
+    for (const name of configNames) {
+      const filePath = resolve(dir, name);
+      if (existsSync(filePath)) {
+        return importConfig(filePath);
       }
     }
+    dir = resolve(dir, "..");
   }
 
   return null;
+}
+
+async function importConfig(filePath: string): Promise<ProxyConfig> {
+  try {
+    const fileUrl = pathToFileURL(filePath).href;
+    const mod = await import(`${fileUrl}?t=${Date.now()}`);
+    const config = mod.default || mod;
+    console.log(`Loaded config from ${filePath}`);
+    return config as ProxyConfig;
+  } catch (error) {
+    console.error(`Error loading config from ${filePath}:`, error);
+    process.exit(1);
+  }
 }
 
 async function main() {

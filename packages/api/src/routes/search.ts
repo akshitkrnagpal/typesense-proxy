@@ -9,8 +9,9 @@ import {
   type TypesenseMultiSearchResponse,
 } from "../lib/transform.js";
 import { getTypesenseClient } from "../lib/typesense.js";
+import { getSearchableFields, type CollectionDefinition } from "../proxy-config.js";
 
-export function createSearchRoutes(config: Config) {
+export function createSearchRoutes(config: Config, collectionDefs?: Record<string, CollectionDefinition>) {
   const app = new Hono();
   const cache = new LRUCache({ maxSize: config.cache.maxSize, ttl: config.cache.ttl });
   const typesense = getTypesenseClient(config);
@@ -64,7 +65,20 @@ export function createSearchRoutes(config: Config) {
     // Transform Algolia requests to Typesense format
     const searches = body.requests.map((req) => {
       const resolvedCollection = resolveCollection(config.collections, req.indexName, locale);
-      return transformAlgoliaRequestToTypesense(req, resolvedCollection);
+      const tsParams = transformAlgoliaRequestToTypesense(req, resolvedCollection);
+
+      // Auto-populate query_by from collection config's searchable fields
+      if (!tsParams.query_by && collectionDefs) {
+        const def = collectionDefs[req.indexName];
+        if (def) {
+          const searchableFields = getSearchableFields(def);
+          if (searchableFields.length > 0) {
+            tsParams.query_by = searchableFields.join(",");
+          }
+        }
+      }
+
+      return tsParams;
     });
 
     // Execute multi_search

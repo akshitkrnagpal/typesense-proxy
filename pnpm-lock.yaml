@@ -173,20 +173,20 @@ importers:
         version: link:../js
     devDependencies:
       '@types/react':
-        specifier: ^19
-        version: 19.2.14
+        specifier: ^18.3.0
+        version: 18.3.28
       '@types/react-dom':
-        specifier: ^19
-        version: 19.2.3(@types/react@19.2.14)
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.28)
       react:
-        specifier: ^19.0.0
-        version: 19.2.4
+        specifier: ^18.3.0
+        version: 18.3.1
       react-dom:
-        specifier: ^19.0.0
-        version: 19.2.4(react@19.2.4)
+        specifier: ^18.3.0
+        version: 18.3.1(react@18.3.1)
       react-instantsearch:
         specifier: ^7.29.0
-        version: 7.29.0(algoliasearch@5.50.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 7.29.0(algoliasearch@5.50.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       tsup:
         specifier: ^8.4.0
         version: 8.5.1(jiti@2.6.1)(postcss@8.5.8)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)
@@ -6874,6 +6874,15 @@ snapshots:
 
   inline-style-parser@0.1.1: {}
 
+  instantsearch-ui-components@0.23.0(react@18.3.1):
+    dependencies:
+      '@swc/helpers': 0.5.18
+      markdown-to-jsx: 7.7.17(react@18.3.1)
+      zod: 3.25.76
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
+    transitivePeerDependencies:
+      - react
+
   instantsearch-ui-components@0.23.0(react@19.2.4):
     dependencies:
       '@swc/helpers': 0.5.18
@@ -7247,6 +7256,10 @@ snapshots:
   markdown-extensions@1.1.1: {}
 
   markdown-table@3.0.4: {}
+
+  markdown-to-jsx@7.7.17(react@18.3.1):
+    optionalDependencies:
+      react: 18.3.1
 
   markdown-to-jsx@7.7.17(react@19.2.4):
     optionalDependencies:
@@ -8156,6 +8169,17 @@ snapshots:
       react: 19.2.4
       scheduler: 0.27.0
 
+  react-instantsearch-core@7.29.0(algoliasearch@5.50.1)(react@18.3.1):
+    dependencies:
+      '@swc/helpers': 0.5.18
+      algoliasearch: 5.50.1
+      algoliasearch-helper: 3.28.1(algoliasearch@5.50.1)
+      instantsearch.js: 4.93.0(algoliasearch@5.50.1)
+      react: 18.3.1
+      use-sync-external-store: 1.6.0(react@18.3.1)
+      zod: 3.25.76
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
+
   react-instantsearch-core@7.29.0(algoliasearch@5.50.1)(react@19.2.4):
     dependencies:
       '@swc/helpers': 0.5.18
@@ -8166,6 +8190,16 @@ snapshots:
       use-sync-external-store: 1.6.0(react@19.2.4)
       zod: 3.25.76
       zod-to-json-schema: 3.24.6(zod@3.25.76)
+
+  react-instantsearch@7.29.0(algoliasearch@5.50.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      '@swc/helpers': 0.5.18
+      algoliasearch: 5.50.1
+      instantsearch-ui-components: 0.23.0(react@18.3.1)
+      instantsearch.js: 4.93.0(algoliasearch@5.50.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      react-instantsearch-core: 7.29.0(algoliasearch@5.50.1)(react@18.3.1)
 
   react-instantsearch@7.29.0(algoliasearch@5.50.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -8954,6 +8988,10 @@ snapshots:
   uri-js@4.4.1:
     dependencies:
       punycode: 2.3.1
+
+  use-sync-external-store@1.6.0(react@18.3.1):
+    dependencies:
+      react: 18.3.1
 
   use-sync-external-store@1.6.0(react@19.2.4):
     dependencies:

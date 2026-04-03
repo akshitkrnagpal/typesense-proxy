@@ -25,3 +25,5 @@ export { Pagination, type PaginationProps, type PaginationElements } from "./com
 export { Stats, type StatsProps, type StatsElements } from "./components/Stats";
 export { SortBy, type SortByProps, type SortByElements, type SortByItem } from "./components/SortBy";
 export { LocaleSelector, type LocaleSelectorProps, type LocaleSelectorElements, type LocaleOption } from "./components/LocaleSelector";
+export { NoResults, type NoResultsProps, type NoResultsElements } from "./components/NoResults";
+export { HitsSkeleton, type HitsSkeletonProps, type HitsSkeletonElements } from "./components/HitsSkeleton";

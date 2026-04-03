@@ -1,5 +1,9 @@
-import { useMemo, useState } from "react";
-import { InstantSearch, Configure } from "react-instantsearch";
+import { useMemo, useState, useRef, useCallback } from "react";
+import {
+  InstantSearch,
+  Configure,
+  useInstantSearch,
+} from "react-instantsearch";
 import { createSearchClient } from "@tsproxy/js";
 import {
   SearchBox,
@@ -7,9 +11,27 @@ import {
   RefinementList,
   Pagination,
   Stats,
+  NoResults,
+  HitsSkeleton,
 } from "@tsproxy/react";
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const INDEX_NAME = process.env.NEXT_PUBLIC_INDEX_NAME || "products";
+
+// --- Debounce helper ---
+
+function useDebouncedSearch(delay = 300) {
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  return useCallback(
+    (query: string, search: (value: string) => void) => {
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => search(query), delay);
+    },
+    [delay],
+  );
+}
+
+
+// --- Collapsible filter sidebar ---
 
 function CollapsibleFilter({
   title,
@@ -47,6 +69,87 @@ function CollapsibleFilter({
     </div>
   );
 }
+
+// --- Loading wrapper ---
+
+function SearchResults() {
+  const { status } = useInstantSearch();
+  const isLoading = status === "loading" || status === "stalled";
+
+  return (
+    <div>
+      {isLoading ? (
+        <HitsSkeleton
+          count={8}
+          overrides={{
+            List: {
+              props: {
+                className:
+                  "grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4",
+              },
+            },
+          }}
+        />
+      ) : (
+        <>
+          <NoResults
+            overrides={{
+              Root: {
+                props: {
+                  className:
+                    "flex flex-col items-center justify-center py-16 text-center",
+                },
+              },
+              Title: {
+                props: {
+                  className: "text-lg font-semibold text-gray-900",
+                },
+              },
+              Message: {
+                props: {
+                  className: "mt-1 text-sm text-gray-500",
+                },
+              },
+            }}
+          />
+          <Hits
+            hitComponent={Hit}
+            overrides={{
+              List: {
+                props: {
+                  className:
+                    "grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4",
+                  style: { listStyle: "none", padding: 0 },
+                },
+              },
+            }}
+          />
+        </>
+      )}
+
+      <div className="mt-10 flex justify-center">
+        <Pagination
+          overrides={{
+            List: {
+              props: { className: "flex items-center gap-1" },
+            },
+            Item: {
+              props: { className: "text-sm" },
+            },
+            Link: {
+              props: {
+                className:
+                  "block rounded-lg px-3 py-2 text-gray-600 hover:bg-gray-100",
+              },
+            },
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// --- Product card ---
 
 const PLACEHOLDER_COLORS = [
   "bg-amber-50",
@@ -97,15 +200,11 @@ function Hit({ hit }: { hit: Record<string, unknown> }) {
         </button>
       </div>
       <div className="mt-2">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
-            {String(hit.name || hit.title || hit.objectID)}
-          </h3>
-        </div>
+        <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
+          {String(hit.name || hit.title || hit.objectID)}
+        </h3>
         {hit.brand && (
-          <p className="mt-0.5 text-xs text-gray-500">
-            {String(hit.brand)}
-          </p>
+          <p className="mt-0.5 text-xs text-gray-500">{String(hit.brand)}</p>
         )}
         <p className="mt-1 text-base font-bold text-gray-900">
           ${String(hit.price)}
@@ -118,23 +217,46 @@ function Hit({ hit }: { hit: Record<string, unknown> }) {
   );
 }
 
-export default function SearchPage() {
-  const indexName = process.env.NEXT_PUBLIC_INDEX_NAME || "products";
+// --- Refinement list overrides (shared) ---
 
+const refinementOverrides = {
+  List: { props: { className: "space-y-2" } },
+  Item: { props: { className: "text-sm text-gray-700" } },
+  Label: {
+    props: {
+      className:
+        "flex items-center gap-2.5 cursor-pointer hover:text-gray-900",
+    },
+  },
+  Checkbox: {
+    props: {
+      className:
+        "h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500",
+    },
+  },
+  Count: { props: { className: "ml-auto text-xs text-gray-400" } },
+} as const;
+
+// --- Main page ---
+
+export default function SearchPage() {
   const searchClient = useMemo(
     () => createSearchClient({ url: API_URL }),
     [],
   );
 
+  const debouncedSearch = useDebouncedSearch(300);
+
   return (
     <div className="min-h-screen bg-white">
-      <InstantSearch searchClient={searchClient} indexName={indexName}>
-        <header className="border-b border-gray-200 bg-white px-6 py-4">
+      <InstantSearch searchClient={searchClient} indexName={INDEX_NAME}>
+        <header className="sticky top-0 z-10 border-b border-gray-200 bg-white px-6 py-4">
           <div className="mx-auto flex max-w-7xl items-center gap-6">
             <h1 className="text-xl font-bold text-gray-900">tsproxy</h1>
             <div className="flex-1">
               <SearchBox
                 placeholder="Search"
+                queryHook={debouncedSearch}
                 overrides={{
                   Root: { props: { className: "w-full" } },
                   Form: { props: { className: "relative" } },
@@ -176,101 +298,18 @@ export default function SearchPage() {
               <CollapsibleFilter title="Category" defaultOpen>
                 <RefinementList
                   attribute="category"
-                  overrides={{
-                    List: { props: { className: "space-y-2" } },
-                    Item: {
-                      props: {
-                        className: "text-sm text-gray-700",
-                      },
-                    },
-                    Label: {
-                      props: {
-                        className:
-                          "flex items-center gap-2.5 cursor-pointer hover:text-gray-900",
-                      },
-                    },
-                    Checkbox: {
-                      props: {
-                        className:
-                          "h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500",
-                      },
-                    },
-                    Count: {
-                      props: {
-                        className: "ml-auto text-xs text-gray-400",
-                      },
-                    },
-                  }}
+                  overrides={refinementOverrides}
                 />
               </CollapsibleFilter>
-
               <CollapsibleFilter title="Brand" defaultOpen>
                 <RefinementList
                   attribute="brand"
-                  overrides={{
-                    List: { props: { className: "space-y-2" } },
-                    Item: {
-                      props: {
-                        className: "text-sm text-gray-700",
-                      },
-                    },
-                    Label: {
-                      props: {
-                        className:
-                          "flex items-center gap-2.5 cursor-pointer hover:text-gray-900",
-                      },
-                    },
-                    Checkbox: {
-                      props: {
-                        className:
-                          "h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500",
-                      },
-                    },
-                    Count: {
-                      props: {
-                        className: "ml-auto text-xs text-gray-400",
-                      },
-                    },
-                  }}
+                  overrides={refinementOverrides}
                 />
               </CollapsibleFilter>
             </aside>
 
-            <div>
-              <Hits
-                hitComponent={Hit}
-                overrides={{
-                  List: {
-                    props: {
-                      className:
-                        "grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4",
-                      style: { listStyle: "none", padding: 0 },
-                    },
-                  },
-                }}
-              />
-
-              <div className="mt-10 flex justify-center">
-                <Pagination
-                  overrides={{
-                    List: {
-                      props: { className: "flex items-center gap-1" },
-                    },
-                    Item: {
-                      props: {
-                        className: "text-sm",
-                      },
-                    },
-                    Link: {
-                      props: {
-                        className:
-                          "block rounded-lg px-3 py-2 text-gray-600 hover:bg-gray-100",
-                      },
-                    },
-                  }}
-                />
-              </div>
-            </div>
+            <SearchResults />
           </div>
         </div>
       </InstantSearch>

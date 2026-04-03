@@ -1,7 +1,7 @@
 import { useMemo, type ReactNode } from "react";
 import { InstantSearch } from "react-instantsearch";
 import { createSearchClient } from "@tsproxy/js";
-import { LocaleProvider, useLocale } from "../context/LocaleContext.js";
+import { LocaleProvider, useLocale } from "../context/LocaleContext";
 
 interface SearchProviderProps {
   serverUrl: string;
@@ -18,12 +18,20 @@ function SearchProviderInner({
   const { locale } = useLocale();
 
   const searchClient = useMemo(
-    () => createSearchClient({ url: serverUrl, locale, cache: true }),
+    () =>
+      createSearchClient({
+        url: serverUrl,
+        ...(locale ? { locale } : {}),
+        cache: true,
+      }),
     [serverUrl, locale],
   );
 
   return (
-    <InstantSearch searchClient={searchClient} indexName={indexName}>
+    <InstantSearch
+      searchClient={searchClient as Parameters<typeof InstantSearch>[0]["searchClient"]}
+      indexName={indexName}
+    >
       {children}
     </InstantSearch>
   );

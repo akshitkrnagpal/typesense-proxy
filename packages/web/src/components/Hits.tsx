@@ -1,31 +1,37 @@
 import { useHits } from "react-instantsearch";
-import type { Hit as AlgoliaHit } from "instantsearch.js";
 import type { ReactNode } from "react";
+import { getOverride } from "../overrides/getOverride";
+import type { Overrides } from "../overrides/types";
 
-interface HitsProps<THit extends AlgoliaHit> {
-  hitComponent: (props: { hit: THit }) => ReactNode;
-  classNames?: {
-    root?: string;
-    list?: string;
-    item?: string;
-  };
+type HitsElements = {
+  Root: "div";
+  List: "ol";
+  Item: "li";
+};
+
+interface HitsProps {
+  hitComponent: (props: { hit: Record<string, unknown> }) => ReactNode;
+  overrides?: Overrides<HitsElements>;
 }
 
-export function Hits<THit extends AlgoliaHit>({
-  hitComponent: HitComponent,
-  classNames,
-}: HitsProps<THit>) {
-  const { items } = useHits<THit>();
+export function Hits({ hitComponent: HitComponent, overrides }: HitsProps) {
+  const { items } = useHits();
+
+  const root = getOverride("div", overrides?.Root);
+  const list = getOverride("ol", overrides?.List);
+  const item = getOverride("li", overrides?.Item);
 
   return (
-    <div className={classNames?.root}>
-      <ol className={classNames?.list}>
+    <root.Component {...root.resolveProps({})}>
+      <list.Component {...list.resolveProps({})}>
         {items.map((hit) => (
-          <li key={hit.objectID} className={classNames?.item}>
-            <HitComponent hit={hit} />
-          </li>
+          <item.Component key={hit.objectID} {...item.resolveProps({})}>
+            <HitComponent hit={hit as Record<string, unknown>} />
+          </item.Component>
         ))}
-      </ol>
-    </div>
+      </list.Component>
+    </root.Component>
   );
 }
+
+export type { HitsProps, HitsElements };

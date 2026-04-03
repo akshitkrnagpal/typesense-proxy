@@ -1,183 +1,272 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
+import { InstantSearch, Configure } from "react-instantsearch";
+import { createSearchClient } from "@tsproxy/js";
 import {
-  InstantSearch,
   SearchBox,
   Hits,
   RefinementList,
   Pagination,
   Stats,
-  Configure,
-} from "react-instantsearch";
-import { createSearchClient } from "@tsproxy/js";
+} from "@tsproxy/react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
-function Hit({ hit }: { hit: Record<string, unknown> }) {
+function CollapsibleFilter({
+  title,
+  children,
+  defaultOpen = false,
+}: {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
-    <article className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-      <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-        {String(hit.name || hit.title || hit.objectID)}
-      </h3>
-      {hit.description && (
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          {String(hit.description)}
-        </p>
-      )}
-      <div className="mt-2 flex items-center gap-3">
-        {hit.price !== undefined && (
-          <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-            ${String(hit.price)}
-          </span>
-        )}
-        {hit.rating !== undefined && (
-          <span className="text-sm text-amber-600">
-            {"★".repeat(Math.round(Number(hit.rating)))} {String(hit.rating)}
-          </span>
-        )}
-      </div>
-      <div className="mt-2 flex gap-2">
-        {hit.category && (
-          <span className="inline-block rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-            {String(hit.category)}
-          </span>
-        )}
-        {hit.brand && (
-          <span className="inline-block rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
-            {String(hit.brand)}
-          </span>
-        )}
-        {hit.in_stock === false && (
-          <span className="inline-block rounded-full bg-red-50 px-2 py-0.5 text-xs text-red-600 dark:bg-red-900/30 dark:text-red-400">
-            Out of stock
-          </span>
-        )}
-      </div>
-    </article>
+    <div className="border-b border-gray-200 py-4">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between text-sm font-semibold text-gray-900"
+      >
+        {title}
+        <svg
+          className={`h-4 w-4 text-gray-500 transition-transform ${open ? "rotate-180" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+      {open && <div className="mt-3">{children}</div>}
+    </div>
   );
 }
 
-const LOCALES = [
-  { code: "en", label: "English" },
-  { code: "fr", label: "French" },
-  { code: "de", label: "German" },
+const PLACEHOLDER_COLORS = [
+  "bg-amber-50",
+  "bg-sky-50",
+  "bg-rose-50",
+  "bg-emerald-50",
+  "bg-violet-50",
+  "bg-orange-50",
+  "bg-teal-50",
+  "bg-pink-50",
+  "bg-indigo-50",
+  "bg-lime-50",
+  "bg-cyan-50",
+  "bg-fuchsia-50",
 ];
 
+function Hit({ hit }: { hit: Record<string, unknown> }) {
+  const colorIndex =
+    Math.abs(String(hit.id || hit.objectID || "0").charCodeAt(0)) %
+    PLACEHOLDER_COLORS.length;
+  return (
+    <div className="group">
+      <div
+        className={`relative aspect-square overflow-hidden rounded-lg border border-gray-200 ${PLACEHOLDER_COLORS[colorIndex]}`}
+      >
+        <div className="flex h-full items-center justify-center p-6">
+          <span className="text-center text-lg font-medium text-gray-400">
+            {String(hit.name || hit.title || "")}
+          </span>
+        </div>
+        <button
+          type="button"
+          className="absolute right-3 top-3 rounded-full bg-white p-1.5 opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
+        >
+          <svg
+            className="h-5 w-5 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+            />
+          </svg>
+        </button>
+      </div>
+      <div className="mt-2">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
+            {String(hit.name || hit.title || hit.objectID)}
+          </h3>
+        </div>
+        {hit.brand && (
+          <p className="mt-0.5 text-xs text-gray-500">
+            {String(hit.brand)}
+          </p>
+        )}
+        <p className="mt-1 text-base font-bold text-gray-900">
+          ${String(hit.price)}
+        </p>
+        {hit.in_stock === false && (
+          <p className="mt-0.5 text-xs text-red-500">Out of stock</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function SearchPage() {
-  const [locale, setLocale] = useState("en");
   const indexName = process.env.NEXT_PUBLIC_INDEX_NAME || "products";
 
   const searchClient = useMemo(
-    () => createSearchClient({ url: API_URL, locale }),
-    [locale]
+    () => createSearchClient({ url: API_URL }),
+    [],
   );
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-      <header className="border-b border-zinc-200 bg-white px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
-            Search Demo
-          </h1>
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-zinc-600 dark:text-zinc-400">
-              Language:
-            </label>
-            <select
-              value={locale}
-              onChange={(e) => setLocale(e.target.value)}
-              className="rounded border border-zinc-300 bg-white px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
-            >
-              {LOCALES.map((l) => (
-                <option key={l.code} value={l.code}>
-                  {l.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-white">
       <InstantSearch searchClient={searchClient} indexName={indexName}>
+        <header className="border-b border-gray-200 bg-white px-6 py-4">
+          <div className="mx-auto flex max-w-7xl items-center gap-6">
+            <h1 className="text-xl font-bold text-gray-900">tsproxy</h1>
+            <div className="flex-1">
+              <SearchBox
+                placeholder="Search"
+                overrides={{
+                  Root: { props: { className: "w-full" } },
+                  Form: { props: { className: "relative" } },
+                  Input: {
+                    props: {
+                      className:
+                        "w-full rounded-full border border-gray-300 bg-gray-50 px-5 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-400 focus:bg-white focus:outline-none",
+                    },
+                  },
+                  SubmitButton: { props: { hidden: true } },
+                  ResetButton: {
+                    props: {
+                      className:
+                        "absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600",
+                    },
+                  },
+                }}
+              />
+            </div>
+          </div>
+        </header>
+
         <Configure hitsPerPage={12} />
-        <div className="mx-auto max-w-6xl px-6 py-8">
-          <div className="mb-6">
-            <SearchBox
-              placeholder="Search products..."
-              classNames={{
-                root: "w-full",
-                input:
-                  "w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100",
-                submit: "hidden",
-                reset: "hidden",
-              }}
-            />
-          </div>
 
-          <div className="mb-4">
+        <div className="mx-auto max-w-7xl px-6 py-6">
+          <div className="mb-4 flex items-baseline gap-3">
+            <h2 className="text-2xl font-bold text-gray-900">Products</h2>
             <Stats
-              classNames={{
-                root: "text-sm text-zinc-500 dark:text-zinc-400",
+              overrides={{
+                Root: { props: { className: "inline" } },
+                Text: { props: { className: "text-sm text-gray-500" } },
               }}
+              formatText={(n) => `${n.toLocaleString()} results`}
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
-            <aside className="md:col-span-1">
-              <div className="mb-6">
-                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                  Category
-                </h2>
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-[240px_1fr]">
+            <aside>
+              <CollapsibleFilter title="Category" defaultOpen>
                 <RefinementList
                   attribute="category"
-                  classNames={{
-                    root: "space-y-1",
-                    item: "flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300",
-                    selectedItem:
-                      "font-semibold text-zinc-900 dark:text-zinc-100",
-                    count:
-                      "rounded-full bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-500 dark:bg-zinc-800",
-                    checkbox: "rounded border-zinc-300 dark:border-zinc-600",
-                    label: "flex items-center gap-2 cursor-pointer",
+                  overrides={{
+                    List: { props: { className: "space-y-2" } },
+                    Item: {
+                      props: {
+                        className: "text-sm text-gray-700",
+                      },
+                    },
+                    Label: {
+                      props: {
+                        className:
+                          "flex items-center gap-2.5 cursor-pointer hover:text-gray-900",
+                      },
+                    },
+                    Checkbox: {
+                      props: {
+                        className:
+                          "h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500",
+                      },
+                    },
+                    Count: {
+                      props: {
+                        className: "ml-auto text-xs text-gray-400",
+                      },
+                    },
                   }}
                 />
-              </div>
+              </CollapsibleFilter>
 
-              <div className="mb-6">
-                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                  Brand
-                </h2>
+              <CollapsibleFilter title="Brand" defaultOpen>
                 <RefinementList
                   attribute="brand"
-                  classNames={{
-                    root: "space-y-1",
-                    item: "flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300",
-                    selectedItem:
-                      "font-semibold text-zinc-900 dark:text-zinc-100",
-                    count:
-                      "rounded-full bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-500 dark:bg-zinc-800",
-                    checkbox: "rounded border-zinc-300 dark:border-zinc-600",
-                    label: "flex items-center gap-2 cursor-pointer",
+                  overrides={{
+                    List: { props: { className: "space-y-2" } },
+                    Item: {
+                      props: {
+                        className: "text-sm text-gray-700",
+                      },
+                    },
+                    Label: {
+                      props: {
+                        className:
+                          "flex items-center gap-2.5 cursor-pointer hover:text-gray-900",
+                      },
+                    },
+                    Checkbox: {
+                      props: {
+                        className:
+                          "h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500",
+                      },
+                    },
+                    Count: {
+                      props: {
+                        className: "ml-auto text-xs text-gray-400",
+                      },
+                    },
                   }}
                 />
-              </div>
+              </CollapsibleFilter>
             </aside>
 
-            <div className="md:col-span-3">
+            <div>
               <Hits
                 hitComponent={Hit}
-                classNames={{
-                  root: "",
-                  list: "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3",
+                overrides={{
+                  List: {
+                    props: {
+                      className:
+                        "grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4",
+                      style: { listStyle: "none", padding: 0 },
+                    },
+                  },
                 }}
               />
 
-              <div className="mt-8 flex justify-center">
+              <div className="mt-10 flex justify-center">
                 <Pagination
-                  classNames={{
-                    root: "flex gap-1",
-                    item: "rounded px-3 py-1 text-sm text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800",
-                    selectedItem:
-                      "rounded bg-zinc-900 px-3 py-1 text-sm text-white dark:bg-zinc-100 dark:text-zinc-900",
+                  overrides={{
+                    List: {
+                      props: { className: "flex items-center gap-1" },
+                    },
+                    Item: {
+                      props: {
+                        className: "text-sm",
+                      },
+                    },
+                    Link: {
+                      props: {
+                        className:
+                          "block rounded-lg px-3 py-2 text-gray-600 hover:bg-gray-100",
+                      },
+                    },
                   }}
                 />
               </div>

@@ -1,5 +1,5 @@
 /**
- * Algolia-compatible SearchClient interface.
+ * InstantSearch-compatible SearchClient interface.
  * Can be passed directly to InstantSearch's searchClient prop.
  */
 export interface SearchClient {

@@ -27,7 +27,7 @@ export function SearchProvider({
 
   return (
     <InstantSearch searchClient={searchClient as any} indexName={indexName}>
-      {children}
+      {children as any}
     </InstantSearch>
   );
 }

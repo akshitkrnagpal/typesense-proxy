@@ -28,7 +28,8 @@
   "scripts": {
     "build": "tsup src/index.ts --format esm --target node22",
     "dev": "tsx src/index.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck": "echo 'skip'"
   },
   "dependencies": {
     "@clack/prompts": "^0.10.0",

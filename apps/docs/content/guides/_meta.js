@@ -1,4 +1,4 @@
-{
+export default {
   "search": "Search Integration",
   "ingest": "Ingestion API",
   "ssr": "Server-Side Rendering",

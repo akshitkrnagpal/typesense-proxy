@@ -5,7 +5,7 @@
     "dev": "turbo dev",
     "build": "turbo build --filter='!docs'",
     "test": "turbo test",
-    "typecheck": "turbo typecheck",
+    "typecheck": "turbo run typecheck",
     "lint": "turbo lint",
     "seed": "tsx scripts/seed.ts"
   },
@@ -16,8 +16,11 @@
   },
   "packageManager": "pnpm@10.12.1",
   "pnpm": {
-    "peerDependencyRules": {
-      "allowAny": ["react", "react-dom"]
+    "overrides": {
+      "react": "19.2.4",
+      "react-dom": "19.2.4",
+      "@types/react": "^19",
+      "@types/react-dom": "^19"
     }
   }
 }

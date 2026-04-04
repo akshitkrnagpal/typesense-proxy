@@ -1,4 +1,4 @@
-{
+export default {
   "cli": "@tsproxy/cli",
   "api": "@tsproxy/api",
   "js": "@tsproxy/js",

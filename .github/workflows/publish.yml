@@ -78,3 +78,32 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -fa "v${{ inputs.version }}" -m "v${{ inputs.version }}"
           git push origin "v${{ inputs.version }}" --force
+
+      - name: Extract changelog
+        id: changelog
+        run: |
+          VERSION=${{ inputs.version }}
+          # Extract the section for this version from CHANGELOG.md
+          NOTES=$(awk "/^## ${VERSION}/,/^## [0-9]/" CHANGELOG.md | head -n -1 | tail -n +2)
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ inputs.version }}"
+          name: "v${{ inputs.version }}"
+          body: |
+            ${{ steps.changelog.outputs.notes }}
+
+            ## Packages
+
+            | Package | Version |
+            |---------|---------|
+            | [@tsproxy/cli](https://www.npmjs.com/package/@tsproxy/cli/v/${{ inputs.version }}) | `${{ inputs.version }}` |
+            | [@tsproxy/api](https://www.npmjs.com/package/@tsproxy/api/v/${{ inputs.version }}) | `${{ inputs.version }}` |
+            | [@tsproxy/js](https://www.npmjs.com/package/@tsproxy/js/v/${{ inputs.version }}) | `${{ inputs.version }}` |
+            | [@tsproxy/react](https://www.npmjs.com/package/@tsproxy/react/v/${{ inputs.version }}) | `${{ inputs.version }}` |
+          draft: false
+          prerelease: ${{ contains(inputs.version, '-') }}

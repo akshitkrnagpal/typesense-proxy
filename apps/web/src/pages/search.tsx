@@ -233,16 +233,32 @@ const refinementOverrides = {
   Count: { props: { className: "ml-auto text-xs text-gray-400" } },
 } as const;
 
+// --- Sidebar filters (shared) ---
+
+function Filters() {
+  return (
+    <>
+      <CollapsibleFilter title="Category" defaultOpen>
+        <RefinementList attribute="category" overrides={refinementOverrides} />
+      </CollapsibleFilter>
+      <CollapsibleFilter title="Brand" defaultOpen>
+        <RefinementList attribute="brand" overrides={refinementOverrides} />
+      </CollapsibleFilter>
+    </>
+  );
+}
+
 // --- Main page ---
 
 export default function SearchPage() {
   const debouncedSearch = useDebouncedSearch(300);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   return (
     <SearchProvider serverUrl={API_URL} indexName={INDEX_NAME}>
       <div className="min-h-screen bg-white">
         <header className="sticky top-0 z-10 border-b border-gray-200 bg-white px-6 py-4">
-          <div className="mx-auto flex max-w-7xl items-center gap-6">
+          <div className="mx-auto flex max-w-7xl items-center gap-4">
             <h1 className="text-xl font-bold text-gray-900">tsproxy</h1>
             <div className="flex-1">
               <SearchBox
@@ -267,8 +283,38 @@ export default function SearchPage() {
                 }}
               />
             </div>
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(true)}
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 md:hidden"
+            >
+              Filters
+            </button>
           </div>
         </header>
+
+        {/* Mobile filter drawer */}
+        {filtersOpen && (
+          <div className="fixed inset-0 z-20 md:hidden">
+            <div
+              className="absolute inset-0 bg-black/30"
+              onClick={() => setFiltersOpen(false)}
+            />
+            <div className="absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto rounded-t-2xl bg-white p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+                <button
+                  type="button"
+                  onClick={() => setFiltersOpen(false)}
+                  className="text-sm text-gray-500"
+                >
+                  Done
+                </button>
+              </div>
+              <Filters />
+            </div>
+          </div>
+        )}
 
         <Configure hitsPerPage={12} />
 
@@ -292,7 +338,7 @@ export default function SearchPage() {
                 { value: "products/sort/rating:desc", label: "Top Rated" },
               ]}
               overrides={{
-                Root: { props: { className: "flex items-center gap-2" } },
+                Root: { props: { className: "hidden sm:flex items-center gap-2" } },
                 Select: {
                   props: {
                     className:
@@ -304,19 +350,8 @@ export default function SearchPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-8 md:grid-cols-[240px_1fr]">
-            <aside>
-              <CollapsibleFilter title="Category" defaultOpen>
-                <RefinementList
-                  attribute="category"
-                  overrides={refinementOverrides}
-                />
-              </CollapsibleFilter>
-              <CollapsibleFilter title="Brand" defaultOpen>
-                <RefinementList
-                  attribute="brand"
-                  overrides={refinementOverrides}
-                />
-              </CollapsibleFilter>
+            <aside className="hidden md:block">
+              <Filters />
             </aside>
 
             <SearchResults />

@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.0.3 (2026-04-04)
+
+### Features
+- **@tsproxy/cli**: `tsproxy generate` — scaffold config from existing Typesense schema
+- **@tsproxy/api**: Query suggestions endpoint (`GET /api/suggestions`)
+- **@tsproxy/api**: Analytics tracking (`POST /api/analytics/click`, `/conversion`, `GET /popular`)
+- **@tsproxy/api**: Geo search support (aroundLatLng + aroundRadius → Typesense geo filter)
+- **@tsproxy/api**: Group by support (groupBy + groupLimit params)
+- **@tsproxy/api**: Synonyms management via config (multi-way and one-way)
+- **@tsproxy/api**: Curations/pinning via config (pin and hide documents per query)
+- **@tsproxy/react**: Autocomplete component (standalone, calls /api/suggestions)
+- **Demo**: Mobile responsive filter drawer
+- **Demo**: SortBy hidden on mobile
+
+### DX
+- Friendly error messages for common failures (ECONNREFUSED, bad API key, timeout)
+- `tsproxy migrate --apply` now syncs synonyms and curations to Typesense
+
+### Tests
+- Integration tests for suggestions and analytics endpoints
+- CLI E2E tests (help, version, all commands)
+- 69 total tests passing
+
 ## 0.0.2 (2026-04-04)
 
 ### Features

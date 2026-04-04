@@ -30,19 +30,20 @@ jobs:
 
       - name: Set version
         run: |
-          pnpm --filter @tsproxy/api version ${{ inputs.version }} --no-git-tag-version
-          pnpm --filter @tsproxy/js version ${{ inputs.version }} --no-git-tag-version
-          pnpm --filter @tsproxy/react version ${{ inputs.version }} --no-git-tag-version
-          pnpm --filter @tsproxy/cli version ${{ inputs.version }} --no-git-tag-version
-
-      - name: Update @tsproxy/js dependency in @tsproxy/react
-        run: |
-          cd packages/web
-          node -e "
-            const pkg = require('./package.json');
-            pkg.dependencies['@tsproxy/js'] = '^${{ inputs.version }}';
-            require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n');
-          "
+          VERSION=${{ inputs.version }}
+          for dir in packages/js packages/api packages/web packages/cli; do
+            node -e "
+              const fs = require('fs');
+              const pkg = JSON.parse(fs.readFileSync('$dir/package.json', 'utf-8'));
+              pkg.version = '$VERSION';
+              if (pkg.dependencies && pkg.dependencies['@tsproxy/js'] === 'workspace:*') {
+                pkg.dependencies['@tsproxy/js'] = '^$VERSION';
+              }
+              fs.writeFileSync('$dir/package.json', JSON.stringify(pkg, null, 2) + '\n');
+            "
+          done
+          echo "Versions set to $VERSION"
+          grep '"version"' packages/*/package.json
 
       - name: Build
         run: pnpm build

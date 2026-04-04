@@ -61,7 +61,12 @@ export function createSearchClient(options: CreateSearchClientOptions): SearchCl
       const data = await response.json();
 
       if (enableCache) {
-        resultCache.set(cacheKey, data);
+        // Don't cache error responses or responses with errors
+        const hasResults = data.results?.some((r: any) => r.nbHits > 0 || r.hits?.length > 0);
+        const hasErrors = data._errors?.length > 0;
+        if (hasResults && !hasErrors) {
+          resultCache.set(cacheKey, data);
+        }
       }
 
       return data;

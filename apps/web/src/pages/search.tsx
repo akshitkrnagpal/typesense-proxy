@@ -1,57 +1,22 @@
-import { useMemo, useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import {
-  InstantSearch,
-  InstantSearchSSRProvider,
   Configure,
   useInstantSearch,
-  getServerState,
 } from "react-instantsearch";
-import { history } from "instantsearch.js/es/lib/routers";
-import { renderToString } from "react-dom/server";
-import { createSearchClient } from "@tsproxy/js";
 import {
+  SearchProvider,
   SearchBox,
   Hits,
   RefinementList,
   Pagination,
   Stats,
+  SortBy,
   NoResults,
   HitsSkeleton,
 } from "@tsproxy/react";
-import type { GetServerSideProps } from "next";
-import type { InstantSearchServerState } from "react-instantsearch";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-const SERVER_API_URL = process.env.API_URL || API_URL;
 const INDEX_NAME = process.env.NEXT_PUBLIC_INDEX_NAME || "products";
-
-// --- Types ---
-
-interface SearchPageProps {
-  serverState?: InstantSearchServerState;
-  serverUrl: string;
-}
-
-// --- SSR ---
-
-export const getServerSideProps: GetServerSideProps<SearchPageProps> = async ({ req }) => {
-  const protocol = req.headers["x-forwarded-proto"] || "http";
-  const host = req.headers.host || "localhost:3001";
-  const url = `${protocol}://${host}${req.url}`;
-
-  const serverState = await getServerState(
-    <SearchApp serverUrl={SERVER_API_URL} url={url} />,
-    { renderToString },
-  );
-
-  return {
-    props: {
-      // Next.js can't serialize undefined — round-trip through JSON to strip them
-      serverState: JSON.parse(JSON.stringify(serverState)),
-      serverUrl: API_URL,
-    },
-  };
-};
 
 // --- Debounce helper ---
 
@@ -64,51 +29,6 @@ function useDebouncedSearch(delay = 300) {
     },
     [delay],
   );
-}
-
-// --- URL routing ---
-
-function createRouting(url?: string) {
-  return {
-    router: history({
-      cleanUrlOnDispose: false,
-      getLocation: () => {
-        if (typeof window !== "undefined") return window.location;
-        return new URL(url || "http://localhost:3001/search") as unknown as Location;
-      },
-    }),
-    stateMapping: {
-      stateToRoute(uiState: Record<string, any>) {
-        const indexState = uiState[INDEX_NAME] || {};
-        return {
-          q: indexState.query || undefined,
-          page:
-            indexState.page && indexState.page > 1
-              ? indexState.page
-              : undefined,
-          categories:
-            indexState.refinementList?.category?.join(",") || undefined,
-          brands: indexState.refinementList?.brand?.join(",") || undefined,
-        };
-      },
-      routeToState(routeState: Record<string, any>) {
-        return {
-          [INDEX_NAME]: {
-            query: routeState.q || "",
-            page: routeState.page ? Number(routeState.page) : undefined,
-            refinementList: {
-              ...(routeState.categories
-                ? { category: routeState.categories.split(",") }
-                : {}),
-              ...(routeState.brands
-                ? { brand: routeState.brands.split(",") }
-                : {}),
-            },
-          },
-        };
-      },
-    },
-  };
 }
 
 // --- Collapsible filter sidebar ---
@@ -313,29 +233,13 @@ const refinementOverrides = {
   Count: { props: { className: "ml-auto text-xs text-gray-400" } },
 } as const;
 
-// --- Search app (shared between SSR and client) ---
+// --- Main page ---
 
-function SearchApp({
-  serverUrl,
-  url,
-}: {
-  serverUrl: string;
-  url?: string;
-}) {
-  const searchClient = useMemo(
-    () => createSearchClient({ url: serverUrl }),
-    [serverUrl],
-  );
-
-  const routing = useMemo(() => createRouting(url), [url]);
+export default function SearchPage() {
   const debouncedSearch = useDebouncedSearch(300);
 
   return (
-    <InstantSearch
-      searchClient={searchClient as any}
-      indexName={INDEX_NAME}
-      routing={routing}
-    >
+    <SearchProvider serverUrl={API_URL} indexName={INDEX_NAME}>
       <div className="min-h-screen bg-white">
         <header className="sticky top-0 z-10 border-b border-gray-200 bg-white px-6 py-4">
           <div className="mx-auto flex max-w-7xl items-center gap-6">
@@ -369,14 +273,33 @@ function SearchApp({
         <Configure hitsPerPage={12} />
 
         <div className="mx-auto max-w-7xl px-6 py-6">
-          <div className="mb-4 flex items-baseline gap-3">
-            <h2 className="text-2xl font-bold text-gray-900">Products</h2>
-            <Stats
+          <div className="mb-4 flex items-baseline justify-between">
+            <div className="flex items-baseline gap-3">
+              <h2 className="text-2xl font-bold text-gray-900">Products</h2>
+              <Stats
+                overrides={{
+                  Root: { props: { className: "inline" } },
+                  Text: { props: { className: "text-sm text-gray-500" } },
+                }}
+                formatText={(n) => `${n.toLocaleString()} results`}
+              />
+            </div>
+            <SortBy
+              items={[
+                { value: "products", label: "Relevance" },
+                { value: "products/sort/price:asc", label: "Price: Low to High" },
+                { value: "products/sort/price:desc", label: "Price: High to Low" },
+                { value: "products/sort/rating:desc", label: "Top Rated" },
+              ]}
               overrides={{
-                Root: { props: { className: "inline" } },
-                Text: { props: { className: "text-sm text-gray-500" } },
+                Root: { props: { className: "flex items-center gap-2" } },
+                Select: {
+                  props: {
+                    className:
+                      "rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 focus:border-gray-400 focus:outline-none",
+                  },
+                },
               }}
-              formatText={(n) => `${n.toLocaleString()} results`}
             />
           </div>
 
@@ -400,19 +323,6 @@ function SearchApp({
           </div>
         </div>
       </div>
-    </InstantSearch>
-  );
-}
-
-// --- Page component ---
-
-export default function SearchPage({
-  serverState,
-  serverUrl,
-}: SearchPageProps) {
-  return (
-    <InstantSearchSSRProvider {...serverState}>
-      <SearchApp serverUrl={serverUrl || API_URL} />
-    </InstantSearchSSRProvider>
+    </SearchProvider>
   );
 }

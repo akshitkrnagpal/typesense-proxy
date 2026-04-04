@@ -45,25 +45,29 @@ jobs:
           "
 
       - name: Build
-        run: pnpm build --filter='!docs'
+        run: pnpm build
 
       - name: Publish @tsproxy/js
-        run: pnpm --filter @tsproxy/js publish --access public --no-git-checks --provenance
+        working-directory: packages/js
+        run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @tsproxy/api
-        run: pnpm --filter @tsproxy/api publish --access public --no-git-checks --provenance
+        working-directory: packages/api
+        run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @tsproxy/react
-        run: pnpm --filter @tsproxy/react publish --access public --no-git-checks --provenance
+        working-directory: packages/web
+        run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish @tsproxy/cli
-        run: pnpm --filter @tsproxy/cli publish --access public --no-git-checks --provenance
+        working-directory: packages/cli
+        run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 

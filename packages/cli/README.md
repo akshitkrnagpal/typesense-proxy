@@ -2,7 +2,7 @@
 
 CLI for [tsproxy](https://github.com/akshitkrnagpal/tsproxy) — a Typesense search proxy framework.
 
-> **This project is under heavy development.**
+> **This project is in early release — APIs are stabilizing.**
 
 ## Quick Start
 

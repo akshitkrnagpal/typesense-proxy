@@ -2,7 +2,7 @@
 
 Headless React components for [tsproxy](https://github.com/akshitkrnagpal/tsproxy) with a BaseUI-style overrides pattern.
 
-> **This project is under heavy development.**
+> **This project is in early release — APIs are stabilizing.**
 
 ## Install
 

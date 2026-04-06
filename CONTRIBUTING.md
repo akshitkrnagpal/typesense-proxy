@@ -1,6 +1,6 @@
 # Contributing to tsproxy
 
-Thanks for your interest in contributing! This project is under heavy development and we welcome contributions.
+Thanks for your interest in contributing! This project is in early release — APIs are stabilizing and we welcome contributions.
 
 ## Development Setup
 

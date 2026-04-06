@@ -2,7 +2,7 @@
 
 InstantSearch-compatible `searchClient` adapter for [tsproxy](https://github.com/akshitkrnagpal/tsproxy).
 
-> **This project is under heavy development.**
+> **This project is in early release — APIs are stabilizing.**
 
 ## Install
 

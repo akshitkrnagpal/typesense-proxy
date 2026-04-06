@@ -2,7 +2,7 @@
 
 HonoJS proxy server for [Typesense](https://typesense.org) with caching, rate limiting, and a BullMQ ingestion queue.
 
-> **This project is under heavy development.**
+> **This project is in early release — APIs are stabilizing.**
 
 ## Install
 

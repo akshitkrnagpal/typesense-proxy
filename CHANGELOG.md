@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.0 (2026-04-06)
+
+First minor release — all core features are in place and APIs are stabilizing.
+
+### Highlights
+- Search proxy with caching, rate limiting, and InstantSearch compatibility
+- BullMQ ingestion queue with computed fields
+- Query suggestions, analytics tracking, geo search, group by
+- Synonyms and curations managed via config
+- CLI with init, dev, generate, migrate, seed, health
+- Headless React components with BaseUI-style overrides
+- SSR support, URL sync, debounced search
+- Nextra documentation site
+
+*This release includes all changes from 0.0.1–0.0.3. See below for detailed changelogs.*
+
 ## 0.0.3 (2026-04-04)
 
 ### Features

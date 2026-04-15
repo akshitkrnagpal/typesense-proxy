@@ -1,6 +1,6 @@
 {
   "name": "@tsproxy/js",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "description": "InstantSearch-compatible searchClient adapter for tsproxy",
   "type": "module",
   "main": "./dist/index.js",

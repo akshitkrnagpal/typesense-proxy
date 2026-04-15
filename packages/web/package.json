@@ -1,6 +1,6 @@
 {
   "name": "@tsproxy/react",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "description": "Headless React components for tsproxy with BaseUI-style overrides",
   "type": "module",
   "main": "./dist/index.js",

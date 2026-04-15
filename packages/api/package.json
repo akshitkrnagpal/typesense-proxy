@@ -1,6 +1,6 @@
 {
   "name": "@tsproxy/api",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "description": "HonoJS proxy server for Typesense with caching, rate limiting, and ingestion queue",
   "type": "module",
   "main": "./dist/index.js",

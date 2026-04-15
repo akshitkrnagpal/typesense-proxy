@@ -1,6 +1,6 @@
 {
   "name": "@tsproxy/cli",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "description": "CLI for tsproxy — Typesense search proxy framework",
   "type": "module",
   "bin": {

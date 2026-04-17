@@ -68,6 +68,54 @@ export function createAppRouterHandler(options?: HandlerOptions) {
 }
 
 /**
+ * Creates an InstantSearch-compatible searchClient that dispatches
+ * directly to the embedded Hono app (no HTTP round-trip). Use this
+ * in `getServerSideProps` / RSC contexts so the server doesn't have
+ * to fetch localhost back at itself — a pattern that deadlocks some
+ * hosts and doubles the latency of a cold request.
+ *
+ * The returned client matches the shape of `createSearchClient`
+ * from `@tsproxy/js`, so it can be passed straight into
+ * `<SearchProvider searchClient={...}>` or a bare `<InstantSearch>`.
+ */
+export function createInProcessSearchClient(
+  options?: HandlerOptions & { locale?: string },
+) {
+  const { app } = createApp(options?.config, options?.collections);
+  const locale = options?.locale;
+
+  async function performSearch(requests: unknown[]): Promise<unknown> {
+    const res = await app.fetch(
+      new Request("http://tsproxy.internal/api/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(locale ? { "X-Locale": locale } : {}),
+        },
+        body: JSON.stringify({ requests }),
+      }),
+    );
+    if (!res.ok) {
+      throw new Error(
+        `In-process search failed: ${res.status} ${res.statusText}`,
+      );
+    }
+    return res.json();
+  }
+
+  // Matches the shape of @tsproxy/js createSearchClient. We can't
+  // import the SearchClient type here without pulling @tsproxy/js
+  // into api's dependency graph (tsup's DTS build resolves deps
+  // strictly). The consumer (@tsproxy/react SearchProvider) already
+  // types the prop as SearchClient and casts internally.
+  return {
+    search: performSearch,
+    searchForFacetValues: performSearch,
+    clearCache: () => {},
+  };
+}
+
+/**
  * Creates a handler for Next.js Pages Router (pages/api/[...path].ts).
  *
  * Converts the Node.js IncomingMessage/ServerResponse into a fetch

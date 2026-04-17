@@ -1,12 +1,15 @@
 import { defineConfig } from "@tsproxy/api";
 
 /**
- * Shared config for the embedded Next.js App Router example.
+ * Shared config for the embedded Pages Router example.
  *
- * Both the route handler (app/api/tsproxy/...) and the one-shot seed
- * script (scripts/seed.ts) import this file, so the schema stays in
- * one place. Talks to a local Typesense on :8108 — bring one up with
- * the root-level docker-compose.yml before running `pnpm dev`.
+ * Imported by:
+ *   - pages/api/tsproxy/[[...path]].ts   (the embedded handler)
+ *   - scripts/seed.ts                    (the one-shot ingest)
+ *   - pages/index.tsx                    (in-process searchClient)
+ *
+ * Demonstrates synonyms and curations alongside the usual schema so
+ * you can see how the proxy applies both transparently at query time.
  */
 export default defineConfig({
   typesense: {
@@ -39,6 +42,28 @@ export default defineConfig({
         created_at: { type: "int64", sortable: true },
       },
       defaultSortBy: "created_at",
+
+      // Synonyms — two-way equivalences applied at query time. Search
+      // for "sweatshirt" and the hoodie shows up, and vice versa.
+      synonyms: {
+        hoodie_sweatshirt: {
+          synonyms: ["hoodie", "sweatshirt", "pullover"],
+        },
+        lamp_light: {
+          synonyms: ["lamp", "light"],
+        },
+      },
+
+      // Curations — query-specific pin rules. When someone searches
+      // for "linen" we pin the linen throw blanket to the top so it
+      // always leads the results, ahead of looser keyword matches.
+      curations: {
+        linen_lead: {
+          query: "linen",
+          match: "contains",
+          pinnedIds: ["4"],
+        },
+      },
     },
   },
 });

@@ -7,12 +7,22 @@ full server-side rendering. Next.js 16 + Tailwind v4.
 
 - `@tsproxy/api/nextjs` `createPagesRouterHandler` mounted at
   `pages/api/tsproxy/[[...path]].ts`.
+- `@tsproxy/api/nextjs` `createInProcessSearchClient` in
+  `getServerSideProps` — SSR bypasses HTTP entirely and invokes the
+  Hono app directly.
 - `@tsproxy/react` SearchProvider passing `serverState` through to
   `InstantSearchSSRProvider`.
+- `superjson` for serializing `serverState` across the SSR boundary
+  so Dates / Maps / other non-JSON values survive cleanly.
+- `/api/suggestions` wired into the search box — typing shows a
+  live suggestion dropdown.
+- `/api/analytics/click` fired on hit click, `/api/analytics/conversion`
+  on "Add to cart".
+- Synonyms (`hoodie` ↔ `sweatshirt` ↔ `pullover`, `lamp` ↔ `light`)
+  and a query curation (`linen` pins the linen throw blanket) defined
+  in `tsproxy.config.ts`.
 - `getServerSideProps` → `getServerState` so initial HTML ships with
   hits already rendered — no "empty state flash" on first paint.
-- Shared `tsproxy.config.ts` consumed by the handler and the `pnpm
-  seed` script.
 
 ## Rendering model
 

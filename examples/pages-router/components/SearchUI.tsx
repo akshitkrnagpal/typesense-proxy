@@ -1,5 +1,3 @@
-"use client";
-
 import {
   SearchProvider,
   SearchBox,
@@ -75,7 +73,7 @@ export function SearchUI({ serverUrl, serverState }: Props) {
         <header className="mb-6 flex flex-wrap items-center gap-4 border-b border-border pb-6">
           <div className="text-lg font-semibold tracking-tight">Marketplace</div>
           <div className="rounded-full border border-border px-3 py-1 font-mono text-[10px] uppercase tracking-[0.15em] text-muted">
-            App Router · SSR · embedded tsproxy
+            Pages Router · SSR · embedded tsproxy
           </div>
           <div className="flex-1 min-w-[200px]">
             <SearchBox

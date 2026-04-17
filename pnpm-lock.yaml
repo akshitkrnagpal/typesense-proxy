@@ -128,6 +128,9 @@ importers:
         specifier: ^7.29.0
         version: 7.29.0(algoliasearch@5.50.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
     devDependencies:
+      '@tailwindcss/postcss':
+        specifier: ^4
+        version: 4.2.2
       '@types/node':
         specifier: ^20
         version: 20.19.39
@@ -137,6 +140,9 @@ importers:
       '@types/react-dom':
         specifier: ^19
         version: 19.2.3(@types/react@19.2.14)
+      tailwindcss:
+        specifier: ^4
+        version: 4.2.2
       tsx:
         specifier: ^4.19.0
         version: 4.21.0
@@ -171,6 +177,9 @@ importers:
         specifier: ^7.29.0
         version: 7.29.0(algoliasearch@5.50.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
     devDependencies:
+      '@tailwindcss/postcss':
+        specifier: ^4
+        version: 4.2.2
       '@types/node':
         specifier: ^20
         version: 20.19.39
@@ -180,6 +189,9 @@ importers:
       '@types/react-dom':
         specifier: ^19
         version: 19.2.3(@types/react@19.2.14)
+      tailwindcss:
+        specifier: ^4
+        version: 4.2.2
       tsx:
         specifier: ^4.19.0
         version: 4.21.0
